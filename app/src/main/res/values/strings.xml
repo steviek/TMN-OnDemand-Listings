@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Listings for TMN On Demand</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_about">About</string>
+    <string name="menu_update">Check for new listings</string>
+    <string name="title_activity_movies">Movies</string>
+    <string name="title_activity_list">Listings</string>
+    <string name="title_activity_media_info">Media Info</string>
+
+    <!-- Main Activity -->
+    <string name="movies">Movies</string>
+    <string name="series">Series</string>
+    <string name="title_activity_genres">Genres</string>
+
+    <!-- Show Me Activity -->
+    <string name="title_activity_show_me">Advanced Filter</string>
+    <string name="show_me_top">Show movies that match the following criteria:</string>
+    <string name="show_me_btn_text">Go</string>
+
+    <string-array name="show_me_choices">
+        <item>Cast</item>
+        <item>Genres</item>
+        <item>Parental Advisory</item>
+        <item>Rating</item>
+        <item>Runtime</item>
+        <item>Title</item>
+        <item>Year</item>
+    </string-array>
+    <string-array name="show_me_parental_advisory">
+        <item>G</item>
+        <item>PG</item>
+        <item>PG-13</item>
+        <item>14A</item>
+        <item>NC-17</item>
+        <item>18A</item>
+        <item>R</item>
+        <item>Unrated</item>
+    </string-array>
+    <string-array name="comparisons">
+        <item>less than</item>
+        <item>at most</item>
+        <item>equal to</item>
+        <item>at least</item>
+        <item>greater than</item>
+    </string-array>
+
+    <!-- Media Info Strings -->
+    <string name="menu_imdb">IMDb\u00AE</string>
+    <string name="menu_rotten_tomatoes">Rotten Tomatoes\u00AE</string>
+    <string name="menu_tvdb">TVDb</string>
+
+    <!-- Settings Strings -->
+    <string name="title_activity_settings">Settings</string>
+    <string name="prompt_num_items_top_rated">Number of items to show in top rated:</string>
+    <string name="prompt_check_frequency">Check for new listings every how many days?</string>
+    <string name="info_check_frequency">You can always perform manual checks from the settings menu</string>
+    <string name="info_num_items_top_rated">These settings will take effect upon restart of the application</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_splash">SplashActivity</string>
+    <string name="title_activity_about">AboutActivity</string>
+    <string name="action_settings">Settings</string>
+    
+    <!-- About Strings -->
+    <string name="aboutApp">\tMovie Oracle is an unofficial Android App created by SixByNineApps.  
+        					It is not affiliated or endorsed in any way by Rotten Tomatoes\u00AE, IMDb\u00AE, or
+        					The Movie Network\u2122. You can contact the app creator at <a href="mailto:sixbynineapps@gmail.com">sixbynineapps@gmail.com</a>\n</string>
+    
+    <string name="flixsterCredit">\tThis app uses the Flixster API to retrieve ratings, summary,
+        								cast listings, etc for all movies.  Rotten Tomatoes, Flixster Marks, 
+        								TOMATO icons, Flixster, and ratings and reviews are the sole
+        								intellectual property of Flixster, Inc.\n</string>
+        								
+    <string name="tvdbCredit">\tThis app uses the TVDB API to retrieve summary data for all series.  
+        								This is a great site and they can always use more information and artwork.
+        								Check them out at thetvdb.com\n</string>
+    <string name="devWebSite">Developer\'s Website</string>
+    
+    <string name="ad_unit_id">ca-app-pub-6383222086691934/6147456802</string>
+    <string name="drawer_open">Drawer Open</string>
+    <string name="drawer_close">Drawer Open</string>
+
+</resources>

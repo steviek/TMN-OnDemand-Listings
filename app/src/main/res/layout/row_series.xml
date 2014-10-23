@@ -1,0 +1,23 @@
+
+    <RelativeLayout 
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+	    android:paddingLeft="16dp"
+	    android:paddingBottom="8dp"
+	    android:paddingRight="16dp">
+        
+        <TextView 
+            android:id="@+id/textViewMovieTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Movie Title Here"
+            android:maxLines="1"
+            android:textSize="22sp"
+            android:ellipsize="end"/>
+        
+        
+        
+    </RelativeLayout>
+ 

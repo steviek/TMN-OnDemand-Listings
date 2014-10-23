@@ -1,0 +1,35 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    
+     <item 
+	        android:id="@+id/genres"
+	        android:showAsAction="ifRoom"
+	        android:title="Genres"
+	        android:orderInCategory="1">
+	
+	        <menu>
+	            </menu>
+	            </item>
+    	
+	    <item 
+	        android:id="@+id/dropdown_menu"
+	        android:showAsAction="ifRoom"
+	        android:title="Sort"
+	        android:orderInCategory="2">
+	
+	        <menu>
+	             <item
+		            android:id="@+id/az"
+		            android:orderInCategory="1"
+		            android:title="A-Z"
+		            android:showAsAction="ifRoom"/>
+	             <item
+		            android:id="@+id/rating"
+		            android:orderInCategory="2"
+		            android:title="By Rating"
+		            android:showAsAction="ifRoom"/>
+	        </menu>
+	    </item>
+       
+
+</menu>

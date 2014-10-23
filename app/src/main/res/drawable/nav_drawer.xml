@@ -1,0 +1,8 @@
+<layer-list
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:visible="false"><solid android:color="#00FFFFFF"/></shape>
+    </item>
+    <item android:left="4dp" android:drawable="@drawable/ic_navigation_drawer"/>
+    
+</layer-list>

@@ -1,0 +1,21 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item 
+        android:id="@+id/menu_imdb"
+        android:title="@string/menu_imdb" 
+        android:orderInCategory="100" 
+        android:showAsAction="always"/>
+    
+    <item 
+        android:id="@+id/menu_rotten_tomatoes"
+        android:title="@string/menu_rotten_tomatoes" 
+        android:orderInCategory="110" 
+        android:showAsAction="always"
+        />
+    
+    <item 
+        android:id="@+id/menu_tvdb"
+        android:title="@string/menu_tvdb" 
+        android:orderInCategory="120" 
+        android:showAsAction="always"/>
+</menu>
