@@ -2,6 +2,8 @@ package com.sixbynine.movieoracle.dataprocessor;
 
 import android.os.AsyncTask;
 
+import com.sixbynine.movieoracle.util.Prefs;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -9,12 +11,12 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.HashSet;
+import java.util.Set;
 
 public class WebResources {
 	private static final String WEB_ADDRESS = "https://raw.githubusercontent.com/steviek/TMN-OnDemand-Listings/master/app/src/main/assets/resources.json";
-	public static String sTMNURL;
-	public static String[] sExcludePrefixes;
-	
+
 	public interface Callback{
 		public void onSuccess();
 		public void onFailure();
@@ -47,12 +49,29 @@ public class WebResources {
 		     String json_data = response.toString();
 		     
 		     JSONObject obj = new JSONObject(json_data);
-		     sTMNURL = obj.getString("tmn_url");
-		     JSONArray arr = obj.getJSONArray("exclude_prefixes");
-		     sExcludePrefixes = new String[arr.length()];
-		     for(int i = 0; i < sExcludePrefixes.length; i ++){
-		    	 sExcludePrefixes[i] = arr.optString(i, "");
+
+		     Prefs.saveTmnUrl(obj.getString("tmn_url"));
+
+		     JSONArray excludeArr = obj.getJSONArray("exclude_prefixes");
+             Set<String> excludeSet = new HashSet<String>(excludeArr.length());
+		     for(int i = 0; i < excludeArr.length(); i ++){
+                 excludeSet.add(excludeArr.getString(i));
 		     }
+             Prefs.saveExcludeList(excludeSet);
+
+            JSONArray populatedArr = obj.getJSONArray("populated_urls");
+            Set<String> populatedSet = new HashSet<String>(populatedArr.length());
+            for(int i = 0; i < populatedArr.length(); i ++){
+                populatedSet.add(populatedArr.getString(i));
+            }
+            Prefs.savePopulatedList(populatedSet);
+
+            JSONArray seriesArr = obj.getJSONArray("series");
+            Set<String> seriesSet = new HashSet<String>(seriesArr.length());
+            for(int i = 0; i < seriesArr.length(); i ++){
+                seriesSet.add(seriesArr.getString(i));
+            }
+            Prefs.saveSeriesList(seriesSet);
 		     
 		     
 			}catch(Exception e){
@@ -64,7 +83,7 @@ public class WebResources {
 		@Override
 		protected void onPostExecute(Boolean result) {
 			super.onPostExecute(result);
-			if(result == null || result.booleanValue() == false){
+			if(result == null || !result){
 				callback.onFailure();
 			}else{
 				callback.onSuccess();

@@ -7,6 +7,7 @@ import com.sixbynine.movieoracle.SplashActivityCallback;
 import com.sixbynine.movieoracle.media.Catalogue;
 import com.sixbynine.movieoracle.media.Series;
 import com.sixbynine.movieoracle.util.Logger;
+import com.sixbynine.movieoracle.util.Prefs;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -19,7 +20,6 @@ import java.util.List;
 import java.util.TreeMap;
 
 public class MovieNetworkDataProcessor {
-	//private static final String URL = "http://www.themovienetwork.ca/ondemand/print?network=tmn";
 	private Catalogue catalogue;
 	private List<String> movies;
 	private TreeMap<String, List<String>> series;
@@ -70,7 +70,7 @@ public class MovieNetworkDataProcessor {
 	
 	public void repopulate(){
 		initialized = true;
-		new DownloadListings().execute(WebResources.sTMNURL + "&date=" + getClosestDate());
+		new DownloadListings().execute(Prefs.getTmnUrl() + "&date=" + getClosestDate());
 	}
 	
 	public boolean isFinishedLoading(){
@@ -105,11 +105,20 @@ public class MovieNetworkDataProcessor {
 					Logger.i("Added " + title + " to series");
 				}else{
 					boolean exclude = false;
-					for(String exclusion : WebResources.sExcludePrefixes){
-						if("".equals(exclusion) == false && title.startsWith(exclusion)){
+					for(String exclusion : Prefs.getExcludeList()){
+						if(!"".equals(exclusion) && title.startsWith(exclusion)){
 							exclude = true;
+                            break;
 						}
 					}
+                    if(!exclude) {
+                        for (String ignore : Prefs.getIgnoreList()) {
+                            if (!"".equals(ignore) && title.startsWith(ignore)) {
+                                exclude = true;
+                                break;
+                            }
+                        }
+                    }
 					if(exclude) continue;
 					Logger.i("Added " + title + " to movies");
 					movies.add(title);
@@ -134,7 +143,7 @@ public class MovieNetworkDataProcessor {
 		protected void onPostExecute(Boolean result) {
 			super.onPostExecute(result);
 			finishedLoading = true;
-			loadError = result.booleanValue();
+			loadError = result;
 			cb.notifyChange(SplashActivityCallback.MOVIE_NETWORK_INTERNET_FINISHED);
 		}
 

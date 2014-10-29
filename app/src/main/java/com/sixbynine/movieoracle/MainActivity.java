@@ -98,7 +98,7 @@ public class MainActivity extends ActionBarActivity implements MediaListViewList
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch(item.getItemId()){
     	case R.id.menu_settings:
-    		launchSettings();
+    		//launchSettings();
     		return true;
     	case R.id.menu_about:
     		Intent intent = new Intent(this, AboutFragment.class);
@@ -112,12 +112,12 @@ public class MainActivity extends ActionBarActivity implements MediaListViewList
     	}
 	}
 	
-	private void launchSettings(){
+	/*private void launchSettings(){
 		Intent intent = new Intent(this, SettingsFragment.class);
 		intent.putExtra(FREQUENCY, SplashActivity.checkOnDemandFrequency);
 		intent.putExtra(NUM_TOP_RATED, SplashActivity.showTopRatedNumber);
 		startActivity(intent);
-	}
+	}*/
 
     private void toggle(){
         if(mDrawerIsOpen){
