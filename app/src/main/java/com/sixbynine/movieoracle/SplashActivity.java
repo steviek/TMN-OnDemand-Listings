@@ -29,7 +29,6 @@ import com.sixbynine.movieoracle.util.Prefs;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 
 public class SplashActivity extends ActionBarActivity implements SplashActivityCallback{
 
@@ -47,8 +46,6 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 	private DataProcessor seriesDP;
 	private ProgressBar pb;
 	
-	public static int checkOnDemandFrequency;
-	public static int showTopRatedNumber;
 	public static SplashActivityCallback cb;
 	
 	
@@ -57,11 +54,8 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_splash);
 		
-		pb = (ProgressBar) findViewById(R.id.pb_main_activity);
+		pb = (ProgressBar) findViewById(R.id.progress_bar);
 		cb = this;
-		checkOnDemandFrequency = 3;
-		showTopRatedNumber = 10;
-		loadSettings();
 		if(!mediaDataLoaded) {
 			pb.setVisibility(View.VISIBLE);
 			pb.setMax(100);
@@ -170,8 +164,6 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 		}else if(status == SplashActivityCallback.MOVIE_NETWORK_DATABASE_FINISHED){
 			onDemandListings = OnDemandListingsDAO.getInstance(getApplicationContext()).getCatalogue();
 			listingsLoaded = true;
-			//tv.setText("Loading data from the database");
-			//tv.setVisibility(View.VISIBLE);
 			AllMediaDAO.init(getApplicationContext(), this); //start loading data
 			
 		}else if(status == SplashActivityCallback.NEW_UNMATCHED_MEDIA_RETRIEVED){
@@ -252,22 +244,13 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 		finish();
 	}
 	
-	public void loadSettings(){
-		checkOnDemandFrequency = Prefs.getCheckingFrequency(this, 3);
-		showTopRatedNumber = Prefs.getNumTopRated(this, 10);
-	}
-	
 	private boolean onDemandListingsAreStale(){
-		if(!Prefs.did08092014BugFix(this)){
-			return true;
-		}
-		
-		String oldDate = Prefs.getLastUpdateDate(this);
+		String oldDate = Prefs.getLastUpdateDate();
 		if(oldDate == null){
 			return true;
 		}else{
 			String currentDate = getDateStamp();
-			return isStaleCompare(oldDate, currentDate);
+			return Integer.parseInt(currentDate) - Integer.parseInt(oldDate) > 0;
 		}
 	}
 	
@@ -279,25 +262,7 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 	}
 	
 	private void saveUpdateDate() {
-		Prefs.saveLastUpdateDate(this, getDateStamp());
-	}
-	
-	
-	@SuppressLint("SimpleDateFormat")
-	private boolean isStaleCompare(String oldDate, String newDate){
-		if(BuildConfig.DEBUG) Log.i(((Object) this).getClass().getName(), "The data was last updated on " + oldDate
-						+ "\nThe current date is " + newDate);
-		try{
-		DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
-		Date od = dateFormat.parse(oldDate);
-		Date nd = dateFormat.parse(newDate);
-		int daysBetween = (int) ((nd.getTime() - od.getTime()) / (1000 * 60 * 60 * 24));
-		return daysBetween >= checkOnDemandFrequency;
-		
-		}catch(Exception e){
-			return true;
-		}
-		
+		Prefs.saveLastUpdateDate(getDateStamp());
 	}
 	
 	@Override

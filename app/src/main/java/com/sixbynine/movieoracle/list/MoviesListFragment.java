@@ -4,74 +4,74 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.SubMenu;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import com.sixbynine.movieoracle.MainActivity;
 import com.sixbynine.movieoracle.MediaInfoActivity;
-import com.sixbynine.movieoracle.R;
 import com.sixbynine.movieoracle.adapter.MoviesListAdapter;
 import com.sixbynine.movieoracle.media.Catalogue;
 import com.sixbynine.movieoracle.media.Media;
+import com.sixbynine.movieoracle.model.MediaListViewListener;
 import com.sixbynine.movieoracle.ui.fragment.ActionBarListFragment;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 public class MoviesListFragment extends ActionBarListFragment {
-	private Catalogue allListings;
-	private ArrayList<Media> displayListings;
+	private Catalogue mCatalogue;
+	private ArrayList<Media> mDisplayMedia;
 	private ArrayAdapter<Media> mAdapter;
-	private String az = "A-Z";
-	private String genres = "Movies";
-	
+	private static final String A_Z = "A-Z";
+	private static final String GENRES = "Movies";
+    private MediaListViewListener mListener;
+
     public static MoviesListFragment newInstance(Catalogue movies){
         MoviesListFragment frag = new MoviesListFragment();
         Bundle b = new Bundle();
         b.putParcelable("catalogue", movies);
+        frag.setArguments(b);
+        return frag;
     }
-
 	
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
-		if(activity instanceof MainActivity){
-			parent = (MainActivity) activity;
+		if(activity instanceof MediaListViewListener){
+			mListener = (MediaListViewListener) activity;
 		}else{
-			throw new IllegalStateException(activity.getClass().toString() + " must be MainActivity");
+			throw new IllegalStateException(activity.getClass().toString() + " must implement MediaListViewListener");
 		}
 	}
 
 	@Override
 	public void onDetach() {
 		super.onDetach();
-		parent = null;
+		mListener = null;
 	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		if(getActivity() != null && parent == null){
-			parent = (MainActivity) getActivity();
-		}
-		allListings = parent.catalogue.getMovies();
-		if(allListings != null){
-			displayListings = new ArrayList<Media>(allListings);
-			mAdapter = new MoviesListAdapter(getActivity(), displayListings);
-			this.setListAdapter(mAdapter);
-		}
-		
+        if(savedInstanceState == null){
+            mCatalogue = getArguments().getParcelable("catalogue");
+            mDisplayMedia = new ArrayList<Media>(mCatalogue);
+        }else{
+            mCatalogue = savedInstanceState.getParcelable("catalogue");
+            mDisplayMedia = (Catalogue) savedInstanceState.getParcelable("display");
+        }
 		
 		this.setHasOptionsMenu(true);
 	}
 
-	@Override
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        mAdapter = new MoviesListAdapter(getActivity(), mDisplayMedia);
+        setListAdapter(mAdapter);
+
+    }
+
+   /* @Override
 	public void onPrepareOptionsMenu(Menu menu) {
 		menu.clear();
 		
@@ -85,12 +85,12 @@ public class MoviesListFragment extends ActionBarListFragment {
 			public boolean onMenuItemClick(MenuItem item) {
 				getActivity().runOnUiThread(new Runnable(){
 					public void run(){	
-						displayListings.clear();
-						displayListings.addAll(allListings);
+						mDisplayMedia.clear();
+						mDisplayMedia.addAll(mCatalogue);
 						mAdapter.notifyDataSetChanged();
 						getListView().setSelection(0);
-						MoviesListFragment.this.genres = "Movies";
-						az = "A-Z";
+						MoviesListFragment.this.GENRES = "Movies";
+						A_Z = "A-Z";
 						refreshTitle();
 					}
 				});
@@ -100,7 +100,7 @@ public class MoviesListFragment extends ActionBarListFragment {
 			
 		});
 		
-		for(final String genre : allListings.getGenreListing()){
+		for(final String genre : mCatalogue.getGenreListing()){
 			MenuItem item = genres.add(genre);
 			item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener(){
 
@@ -108,12 +108,12 @@ public class MoviesListFragment extends ActionBarListFragment {
 				public boolean onMenuItemClick(MenuItem item) {
 					getActivity().runOnUiThread(new Runnable(){
 						public void run(){
-							displayListings.clear();
-							displayListings.addAll(allListings.filterBy(Catalogue.GENRE, genre));
+							mDisplayMedia.clear();
+							mDisplayMedia.addAll(mCatalogue.filterBy(Catalogue.GENRE, genre));
 							mAdapter.notifyDataSetChanged();
 							getListView().setSelection(0);
-							MoviesListFragment.this.genres = genre + " Movies";
-							az = "A-Z";
+							MoviesListFragment.this.GENRES = genre + " Movies";
+							A_Z = "A-Z";
 							refreshTitle();
 						}
 					});
@@ -139,11 +139,11 @@ public class MoviesListFragment extends ActionBarListFragment {
 		}
 	}
 
-	
+
 	private void sortByRating() {
 		getActivity().runOnUiThread(new Runnable(){
 			public void run(){
-				Collections.sort(displayListings, new Comparator<Media>(){
+				Collections.sort(mDisplayMedia, new Comparator<Media>(){
 					@Override
 					public int compare(Media m1, Media m2){
 						Double d1 = m1.getRatingAverage();
@@ -153,7 +153,7 @@ public class MoviesListFragment extends ActionBarListFragment {
 				});
 				mAdapter.notifyDataSetChanged();
 				getListView().setSelection(0);
-				az = "- by rating";
+				A_Z = "- by rating";
 				refreshTitle();
 			}
 		});
@@ -162,7 +162,7 @@ public class MoviesListFragment extends ActionBarListFragment {
 	private void sortAlphabetically() {
 		getActivity().runOnUiThread(new Runnable(){
 			public void run(){
-				Collections.sort(displayListings, new Comparator<Media>(){
+				Collections.sort(mDisplayMedia, new Comparator<Media>(){
 					@Override
 					public int compare(Media m1, Media m2){
 						return m1.getTitle().compareTo(m2.getTitle());
@@ -170,15 +170,15 @@ public class MoviesListFragment extends ActionBarListFragment {
 				});
 				mAdapter.notifyDataSetChanged();
 				getListView().setSelection(0);
-				az = "A-Z";
+				A_Z = "A-Z";
 				refreshTitle();
 			}
 		});
-	}
+	}*/
 
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
-		Media m = displayListings.get(position);
+		Media m = mDisplayMedia.get(position);
 
 		Intent intent = new Intent(getActivity(), MediaInfoActivity.class);
 		intent.putExtra("Media", m);
@@ -196,9 +196,9 @@ public class MoviesListFragment extends ActionBarListFragment {
 	}
 	
 	private void refreshTitle(){
-		getActivity().setTitle(genres + " " + az);
+		getActivity().setTitle(GENRES + " " + A_Z);
 		ActionBar ab = getActionBarActivity().getSupportActionBar();
-		ab.setTitle(genres + " " + az);
+		ab.setTitle(GENRES + " " + A_Z);
 	}
 	
 

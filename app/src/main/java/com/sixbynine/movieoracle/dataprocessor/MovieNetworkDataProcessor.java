@@ -1,21 +1,22 @@
 package com.sixbynine.movieoracle.dataprocessor;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.TreeMap;
-
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
 import android.os.AsyncTask;
 import android.util.Log;
 
 import com.sixbynine.movieoracle.SplashActivityCallback;
 import com.sixbynine.movieoracle.media.Catalogue;
 import com.sixbynine.movieoracle.media.Series;
+import com.sixbynine.movieoracle.util.Logger;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.TreeMap;
 
 public class MovieNetworkDataProcessor {
 	//private static final String URL = "http://www.themovienetwork.ca/ondemand/print?network=tmn";
@@ -101,7 +102,7 @@ public class MovieNetworkDataProcessor {
 					
 					if(!series.get(seriesName).contains(title)) series.get(seriesName).add(title);
 					if(movies.contains(seriesName)) movies.remove(title);
-					Log.i(this.getClass().getName(),"Added " + title + " to series");
+					Logger.i("Added " + title + " to series");
 				}else{
 					boolean exclude = false;
 					for(String exclusion : WebResources.sExcludePrefixes){
@@ -110,12 +111,12 @@ public class MovieNetworkDataProcessor {
 						}
 					}
 					if(exclude) continue;
-					Log.i(this.getClass().getName(),"Added " + title + " to movies");
+					Logger.i("Added " + title + " to movies");
 					movies.add(title);
 				}
 				
 			}
-		Log.i(this.getClass().getName(), "Finished loading data.");
+		Logger.i("Finished loading data.");
 
 	 }
 	
@@ -143,7 +144,7 @@ public class MovieNetworkDataProcessor {
 				populate(urls[0]);
 				return true;
 			}catch(Exception e){
-				Log.e(this.getClass().getName(),e.getMessage());
+				Logger.e(e.getMessage());
 				return false;
 			}	
 		}

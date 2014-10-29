@@ -22,7 +22,7 @@ public class SettingsFragment extends ActionBarFragment implements OnValueChange
 			Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.activity_settings, null);
 		
-		checkOnDemandFrequency = Prefs.getCheckingFrequency(getActivity(), 3);
+		checkOnDemandFrequency = Prefs.getCheckingFrequency();
 		
 
 		npCheckFrequency = (NumberPicker) view.findViewById(R.id.NumberPickerUpdateDays);
@@ -39,7 +39,7 @@ public class SettingsFragment extends ActionBarFragment implements OnValueChange
 	@Override
 	public void onValueChange(NumberPicker np, int arg1, int arg2) {
 		if(this.isDetached()) return;
-		Prefs.saveCheckingFrequency(getActivity(), npCheckFrequency.getValue());
+		Prefs.saveCheckingFrequency(npCheckFrequency.getValue());
 		//SplashActivity.cb.updateSettings(new int[] {npCheckFrequency.getValue(), npNumTopRated.getValue()});
 	}
 	

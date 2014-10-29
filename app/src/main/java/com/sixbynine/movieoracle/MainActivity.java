@@ -15,13 +15,15 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.flurry.android.FlurryAgent;
-import com.sixbynine.movieoracle.list.NewMoviesFragment;
+import com.sixbynine.movieoracle.list.MoviesListFragment;
 import com.sixbynine.movieoracle.media.Catalogue;
+import com.sixbynine.movieoracle.media.Media;
+import com.sixbynine.movieoracle.model.MediaListViewListener;
 import com.sixbynine.movieoracle.sql.allmedia.AllMediaDAO;
 import com.sixbynine.movieoracle.sql.ondemandlistings.OnDemandListingsDAO;
 import com.sixbynine.movieoracle.util.Keys;
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements MediaListViewListener{
 	public static final String TITLES_LIST = "titles_list";
 	public static final String FREQUENCY = "frequency";
 	public static final String NUM_TOP_RATED = "numTopRated";
@@ -42,8 +44,7 @@ public class MainActivity extends ActionBarActivity {
 		
 		if(savedInstanceState == null){
 			catalogue = getIntent().getParcelableExtra("catalogue");
-			//mContent = new MoviesListFragment();
-            mContent = NewMoviesFragment.newInstance(catalogue);
+            mContent = MoviesListFragment.newInstance(catalogue);
 		}else{
 			catalogue = savedInstanceState.getParcelable("catalogue");
 			if(catalogue == null) catalogue = getIntent().getParcelableExtra("catalogue");
@@ -191,5 +192,10 @@ public class MainActivity extends ActionBarActivity {
     protected void onStop() {
         super.onStop();
         FlurryAgent.onEndSession(this);
+    }
+
+    @Override
+    public void onMediaSelected(Media m) {
+
     }
 }

@@ -1,17 +1,17 @@
 package com.sixbynine.movieoracle.dataprocessor;
 
+import android.os.AsyncTask;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import android.os.AsyncTask;
-
 public class WebResources {
-	private static final String WEB_ADDRESS = "https://raw.githubusercontent.com/steviek/TMN-On-Demand-Listings/master/assets/resources.json";
+	private static final String WEB_ADDRESS = "https://raw.githubusercontent.com/steviek/TMN-OnDemand-Listings/master/app/src/main/assets/resources.json";
 	public static String sTMNURL;
 	public static String[] sExcludePrefixes;
 	
