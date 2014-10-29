@@ -17,6 +17,7 @@ import org.jsoup.select.Elements;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
 
 public class MovieNetworkDataProcessor {
@@ -95,36 +96,47 @@ public class MovieNetworkDataProcessor {
 		Elements shows = doc.select("td");
 		for(Element show : shows){
 			String title = show.text();
+
 			if(title.contains("Making Of") || title.contains("Recap Show")) continue;
-				if(title.indexOf("Ep.") > 0){
+
+            boolean isSeries = title.indexOf("Ep.") > 0;
+            Set<String> seriesSet = Prefs.getSeriesList();
+            if(seriesSet != null){
+                isSeries = isSeries || seriesSet.contains(title);
+            }
+
+            if(isSeries){
 					String seriesName= title.substring(0, title.indexOf("Ep.")-2);
 					if(!series.containsKey(seriesName)) series.put(seriesName, new ArrayList<String>());
 					
 					if(!series.get(seriesName).contains(title)) series.get(seriesName).add(title);
 					if(movies.contains(seriesName)) movies.remove(title);
 					Logger.i("Added " + title + " to series");
-				}else{
-					boolean exclude = false;
-					for(String exclusion : Prefs.getExcludeList()){
-						if(!"".equals(exclusion) && title.startsWith(exclusion)){
-							exclude = true;
+            }else{
+                boolean exclude = false;
+                Set<String> excludeList = Prefs.getExcludeList();
+                if(excludeList != null) {
+                    for (String exclusion : excludeList) {
+                        if (!"".equals(exclusion) && title.startsWith(exclusion)) {
+                            exclude = true;
                             break;
-						}
-					}
-                    if(!exclude) {
-                        for (String ignore : Prefs.getIgnoreList()) {
-                            if (!"".equals(ignore) && title.startsWith(ignore)) {
-                                exclude = true;
-                                break;
-                            }
                         }
                     }
-					if(exclude) continue;
-					Logger.i("Added " + title + " to movies");
-					movies.add(title);
-				}
-				
-			}
+                }
+                Set<String> ignoreList = Prefs.getIgnoreList();
+                if(!exclude && ignoreList != null) {
+                    for (String ignore : ignoreList) {
+                        if (!"".equals(ignore) && title.startsWith(ignore)) {
+                            exclude = true;
+                            break;
+                        }
+                    }
+                }
+                if(exclude) continue;
+                Logger.i("Added " + title + " to movies");
+                movies.add(title);
+            }
+		}
 		Logger.i("Finished loading data.");
 
 	 }

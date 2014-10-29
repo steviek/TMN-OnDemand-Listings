@@ -2,6 +2,8 @@ package com.sixbynine.movieoracle;
 
 import android.app.Application;
 
+import com.sixbynine.movieoracle.util.Prefs;
+
 /**
  * Created by steviekideckel on 10/23/14.
  */
@@ -13,6 +15,7 @@ public class MyApplication extends Application{
     public void onCreate() {
         super.onCreate();
         sInstance = this;
+        Prefs.onApplicationCreated();
     }
 
     public static MyApplication getInstance(){

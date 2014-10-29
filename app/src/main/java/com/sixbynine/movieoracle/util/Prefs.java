@@ -4,8 +4,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.sixbynine.movieoracle.MyApplication;
+import com.sixbynine.movieoracle.dataprocessor.WebResources;
 
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Set;
 
 public class Prefs {
@@ -13,7 +16,17 @@ public class Prefs {
 	private static final String FREQUENCY = "FREQUENCY";
 	private static final String NUM_TOP_RATED = "NUM_TOP_RATED";
 	private static final String LAST_SAVE_DATE = "LAST_SAVE_DATE";
-	
+
+    private static Queue<Runnable> toDos;
+
+    public static void onApplicationCreated(){
+        if(toDos != null){
+            while(!toDos.isEmpty()){
+                toDos.poll().run();
+            }
+        }
+    }
+
 	private static void init(){
         if(prefs == null && MyApplication.getInstance() != null) {
             prefs = MyApplication.getInstance().getSharedPreferences("movieoracle", Context.MODE_MULTI_PROCESS);
@@ -52,6 +65,8 @@ public class Prefs {
         init();
         if(prefs != null){
             prefs.edit().putStringSet(Keys.EXCLUDE_LIST, list).apply();
+        }else{
+            doLater(Keys.EXCLUDE_LIST, list);
         }
     }
 
@@ -59,6 +74,8 @@ public class Prefs {
         init();
         if(prefs != null){
             prefs.edit().putStringSet(Keys.SERIES_LIST, list).apply();
+        }else{
+            doLater(Keys.SERIES_LIST, list);
         }
     }
 
@@ -66,23 +83,26 @@ public class Prefs {
         init();
         if(prefs != null){
             prefs.edit().putStringSet(Keys.POPULATED_LIST, list).apply();
+        }else{
+            doLater(Keys.POPULATED_LIST, list);
         }
     }
 
     public static Set<String> getExcludeList(){
         init();
         if(prefs != null){
-            return prefs.getStringSet(Keys.EXCLUDE_LIST, new HashSet<String>());
+            return prefs.getStringSet(Keys.EXCLUDE_LIST, WebResources.sExcludeList);
+        }else{
+            return WebResources.sExcludeList;
         }
-        return null;
     }
 
     public static Set<String> getSeriesList(){
         init();
         if(prefs != null){
-            return prefs.getStringSet(Keys.SERIES_LIST, new HashSet<String>());
+            return prefs.getStringSet(Keys.SERIES_LIST, WebResources.sSeriesList);
         }
-        return null;
+        return WebResources.sSeriesList;
     }
 
     public static Set<String> getPopulatedList(){
@@ -108,6 +128,18 @@ public class Prefs {
         return "http://www.themovienetwork.ca/ondemand/print?network=tmn";
     }
 
+    private static void doLater(final String key, final Set<String> value){
+        if(toDos == null){
+            toDos = new LinkedList<Runnable>();
+        }
+        toDos.add(new Runnable() {
+            @Override
+            public void run() {
+                init();
+                prefs.edit().putStringSet(key, value).apply();
+            }
+        });
+    }
 
 
     public class Keys{

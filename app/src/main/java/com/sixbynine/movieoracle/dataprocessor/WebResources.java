@@ -16,6 +16,10 @@ import java.util.Set;
 
 public class WebResources {
 	private static final String WEB_ADDRESS = "https://raw.githubusercontent.com/steviek/TMN-OnDemand-Listings/master/app/src/main/assets/resources.json";
+    public static Set<String> sExcludeList;
+    public static Set<String> sIgnoreList;
+    public static Set<String> sSeriesList;
+
 
 	public interface Callback{
 		public void onSuccess();
@@ -53,11 +57,11 @@ public class WebResources {
 		     Prefs.saveTmnUrl(obj.getString("tmn_url"));
 
 		     JSONArray excludeArr = obj.getJSONArray("exclude_prefixes");
-             Set<String> excludeSet = new HashSet<String>(excludeArr.length());
+             sExcludeList = new HashSet<String>(excludeArr.length());
 		     for(int i = 0; i < excludeArr.length(); i ++){
-                 excludeSet.add(excludeArr.getString(i));
+                 sExcludeList.add(excludeArr.getString(i));
 		     }
-             Prefs.saveExcludeList(excludeSet);
+             Prefs.saveExcludeList(sExcludeList);
 
             JSONArray populatedArr = obj.getJSONArray("populated_urls");
             Set<String> populatedSet = new HashSet<String>(populatedArr.length());
@@ -67,11 +71,11 @@ public class WebResources {
             Prefs.savePopulatedList(populatedSet);
 
             JSONArray seriesArr = obj.getJSONArray("series");
-            Set<String> seriesSet = new HashSet<String>(seriesArr.length());
+            sSeriesList = new HashSet<String>(seriesArr.length());
             for(int i = 0; i < seriesArr.length(); i ++){
-                seriesSet.add(seriesArr.getString(i));
+                sSeriesList.add(seriesArr.getString(i));
             }
-            Prefs.saveSeriesList(seriesSet);
+            Prefs.saveSeriesList(sSeriesList);
 		     
 		     
 			}catch(Exception e){
