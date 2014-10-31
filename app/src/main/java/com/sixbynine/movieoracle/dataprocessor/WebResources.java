@@ -16,9 +16,6 @@ import java.util.Set;
 
 public class WebResources {
 	private static final String WEB_ADDRESS = "https://raw.githubusercontent.com/steviek/TMN-OnDemand-Listings/master/app/src/main/assets/resources.json";
-    public static Set<String> sExcludeList;
-    public static Set<String> sIgnoreList;
-    public static Set<String> sSeriesList;
 
 
 	public interface Callback{
@@ -57,11 +54,11 @@ public class WebResources {
 		     Prefs.saveTmnUrl(obj.getString("tmn_url"));
 
 		     JSONArray excludeArr = obj.getJSONArray("exclude_prefixes");
-             sExcludeList = new HashSet<String>(excludeArr.length());
+             HashSet<String> excludeList = new HashSet<String>(excludeArr.length());
 		     for(int i = 0; i < excludeArr.length(); i ++){
-                 sExcludeList.add(excludeArr.getString(i));
+                 excludeList.add(excludeArr.getString(i));
 		     }
-             Prefs.saveExcludeList(sExcludeList);
+             Prefs.saveExcludeList(excludeList);
 
             JSONArray populatedArr = obj.getJSONArray("populated_urls");
             Set<String> populatedSet = new HashSet<String>(populatedArr.length());
@@ -71,11 +68,11 @@ public class WebResources {
             Prefs.savePopulatedList(populatedSet);
 
             JSONArray seriesArr = obj.getJSONArray("series");
-            sSeriesList = new HashSet<String>(seriesArr.length());
+            HashSet<String> seriesList = new HashSet<String>(seriesArr.length());
             for(int i = 0; i < seriesArr.length(); i ++){
-                sSeriesList.add(seriesArr.getString(i));
+                seriesList.add(seriesArr.getString(i));
             }
-            Prefs.saveSeriesList(sSeriesList);
+            Prefs.saveSeriesList(seriesList);
 		     
 		     
 			}catch(Exception e){

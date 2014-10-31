@@ -21,6 +21,7 @@ import com.sixbynine.movieoracle.dataprocessor.DataProcessor;
 import com.sixbynine.movieoracle.dataprocessor.MovieNetworkDataProcessor;
 import com.sixbynine.movieoracle.dataprocessor.WebResources;
 import com.sixbynine.movieoracle.media.Catalogue;
+import com.sixbynine.movieoracle.rt.RottenTomatoesRestClient;
 import com.sixbynine.movieoracle.sql.allmedia.AllMediaDAO;
 import com.sixbynine.movieoracle.sql.ondemandlistings.OnDemandListingsDAO;
 import com.sixbynine.movieoracle.util.CatalogueHolder;
@@ -190,7 +191,9 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 					movieDP = null;
 					seriesDP = null;
 					movieDP = DataProcessor.createDataProcessor(DataProcessor.ROTTEN_TOMATOES_DATA_PROCESSOR, this);
-					movieDP.populate(getResources(), mergeResult[1].getMovies());
+                RottenTomatoesRestClient.getMovies(mergeResult[1].getMovies());
+                movieDP.populate(getResources(), mergeResult[1].getMovies());
+
 				//}
 				//if(seriesDP == null || !seriesDP.isInitialized()) {
 					seriesDP = DataProcessor.createDataProcessor(DataProcessor.TVDB_DATA_PROCESSOR, this);

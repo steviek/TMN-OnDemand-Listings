@@ -54,103 +54,102 @@ public class RottenTomatoesDataProcessor extends DataProcessor{
 	     JSONObject mediaData = null;
 	     
 	     JSONObject movie1 = mediaArray.getJSONObject(0);
-	     mediaData = movie1;
 
-	    	 JSONObject movie2 = mediaArray.optJSONObject(1);
-	    	 JSONObject movie3 = mediaArray.optJSONObject(2);
-	    	 if(movie2 != null && movie3 != null) {
-                 boolean equal1 = movie1.getString("title").equals(title);
-                 boolean equal2 = movie2.getString("title").equals(title);
-                 boolean equal3 = movie3.getString("title").equals(title);
+         JSONObject movie2 = mediaArray.optJSONObject(1);
+         JSONObject movie3 = mediaArray.optJSONObject(2);
+         if(movie2 != null && movie3 != null) {
+             boolean equal1 = movie1.getString("title").equals(title);
+             boolean equal2 = movie2.getString("title").equals(title);
+             boolean equal3 = movie3.getString("title").equals(title);
 
-                 String year1 = movie1.getString("year");
-                 String year2 = movie2.getString("year");
-                 String year3 = movie3.getString("year");
+             String year1 = movie1.getString("year");
+             String year2 = movie2.getString("year");
+             String year3 = movie3.getString("year");
 
-                 if (equal1) {
-                     if (equal2) {
-                         if (equal3) {
-                             if (year1.compareTo(year2) >= 0) {
-                                 if (year1.compareTo(year3) >= 0) {
-                                     mediaData = movie1;
-                                 } else {
-                                     mediaData = movie3;
-                                 }
-
-                             } else {
-                                 if (year2.compareTo(year3) >= 0) {
-                                     mediaData = movie2;
-                                 } else {
-                                     mediaData = movie3;
-                                 }
-                             }
-                         } else {
-                             if (year1.compareTo(year2) >= 0) {
-                                 mediaData = movie1;
-                             } else {
-                                 mediaData = movie2;
-                             }
-                         }
-                     } else {
-                         if (equal3) {
+             if (equal1) {
+                 if (equal2) {
+                     if (equal3) {
+                         if (year1.compareTo(year2) >= 0) {
                              if (year1.compareTo(year3) >= 0) {
                                  mediaData = movie1;
                              } else {
                                  mediaData = movie3;
                              }
+
                          } else {
-                             mediaData = movie1;
-                         }
-                     }
-                 } else {
-                     if (equal2) {
-                         if (equal3) {
                              if (year2.compareTo(year3) >= 0) {
                                  mediaData = movie2;
                              } else {
                                  mediaData = movie3;
                              }
+                         }
+                     } else {
+                         if (year1.compareTo(year2) >= 0) {
+                             mediaData = movie1;
                          } else {
                              mediaData = movie2;
                          }
-                     } else {
-                         if (equal3) {
-                             mediaData = movie3;
-                         } else {
-                             mediaData = movie1;
-                         }
-                     }
-                 }
-
-             }else if(movie2 != null){
-                 boolean equal1 = movie1.getString("title").equals(title);
-                 boolean equal2 = movie2.getString("title").equals(title);
-
-                 int year1 = movie1.getInt("year");
-                 int year2 = movie2.getInt("year");
-
-                 if (equal1) {
-                     if (equal2) {
-                             if (year1 >= year2) {
-                                 mediaData = movie1;
-                             } else {
-                                 mediaData = movie2;
-                             }
-                     } else {
-                        mediaData = movie1;
                      }
                  } else {
-                     if (equal2) {
-                        mediaData = movie2;
-                     } else {
+                     if (equal3) {
+                         if (year1.compareTo(year3) >= 0) {
                              mediaData = movie1;
+                         } else {
+                             mediaData = movie3;
+                         }
+                     } else {
+                         mediaData = movie1;
                      }
                  }
-             }else{
-                 mediaData = movie1;
+             } else {
+                 if (equal2) {
+                     if (equal3) {
+                         if (year2.compareTo(year3) >= 0) {
+                             mediaData = movie2;
+                         } else {
+                             mediaData = movie3;
+                         }
+                     } else {
+                         mediaData = movie2;
+                     }
+                 } else {
+                     if (equal3) {
+                         mediaData = movie3;
+                     } else {
+                         mediaData = movie1;
+                     }
+                 }
              }
+
+         }else if(movie2 != null){
+             boolean equal1 = movie1.getString("title").equals(title);
+             boolean equal2 = movie2.getString("title").equals(title);
+
+             int year1 = movie1.getInt("year");
+             int year2 = movie2.getInt("year");
+
+             if (equal1) {
+                 if (equal2) {
+                         if (year1 >= year2) {
+                             mediaData = movie1;
+                         } else {
+                             mediaData = movie2;
+                         }
+                 } else {
+                    mediaData = movie1;
+                 }
+             } else {
+                 if (equal2) {
+                    mediaData = movie2;
+                 } else {
+                         mediaData = movie1;
+                 }
+             }
+         }else{
+             mediaData = movie1;
+         }
 	    	
-	    	 
+
 
 	     String rtID = getJSONValueString(mediaData, "id");
 	     media.addId(DataProcessor.ROTTEN_TOMATOES, rtID);
