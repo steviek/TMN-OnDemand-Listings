@@ -196,7 +196,7 @@ public class MovieNetworkDataProcessor {
 		}
 	}
 	
-	private int[] getDateMinusDays(int year, int month, int day, int subtract){
+	public static int[] getDateMinusDays(int year, int month, int day, int subtract){
 		if(subtract == 0){
 			return new int[]{year, month, day};
 		}else{

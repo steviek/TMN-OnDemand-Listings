@@ -258,8 +258,7 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 		if(oldDate == null){
 			return true;
 		}else{
-			String currentDate = getDateStamp();
-			return Integer.parseInt(currentDate) - Integer.parseInt(oldDate) > 0;
+			return Integer.parseInt(getLastTuesday()) - Integer.parseInt(oldDate) > 0;
 		}
 	}
 	
@@ -269,6 +268,43 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 		Calendar cal = Calendar.getInstance();
 		return dateFormat.format(cal.getTime());
 	}
+
+    private String getLastTuesday(){
+        DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+        Calendar cal = Calendar.getInstance();
+        int year = cal.get(Calendar.YEAR);
+        int month = cal.get(Calendar.MONTH);
+        int day = cal.get(Calendar.DAY_OF_MONTH);
+
+        int[] days;
+        switch(cal.get(Calendar.DAY_OF_WEEK)){
+            case Calendar.TUESDAY:
+                days = MovieNetworkDataProcessor.getDateMinusDays(year, month, day, 0);
+                break;
+            case Calendar.WEDNESDAY:
+                days = MovieNetworkDataProcessor.getDateMinusDays(year, month, day, 1);
+                break;
+            case Calendar.THURSDAY:
+                days = MovieNetworkDataProcessor.getDateMinusDays(year, month, day, 2);
+                break;
+            case Calendar.FRIDAY:
+                days = MovieNetworkDataProcessor.getDateMinusDays(year, month, day, 3);
+                break;
+            case Calendar.SATURDAY:
+                days = MovieNetworkDataProcessor.getDateMinusDays(year, month, day, 4);
+                break;
+            case Calendar.SUNDAY:
+                days = MovieNetworkDataProcessor.getDateMinusDays(year, month, day, 5);
+                break;
+            case Calendar.MONDAY:
+            default:
+                days = MovieNetworkDataProcessor.getDateMinusDays(year, month, day, 6);
+                break;
+        }
+
+        cal.set(days[0], days[1], days[2]);
+        return dateFormat.format(cal.getTime());
+    }
 	
 	private void saveUpdateDate() {
 		Prefs.saveLastUpdateDate(getDateStamp());
