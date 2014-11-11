@@ -5,7 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.sixbynine.movieoracle.R;
@@ -21,7 +20,6 @@ public class SummaryListAdapter extends ArrayAdapter<RottenTomatoesSummary> {
     private ArrayList<RottenTomatoesSummary> mSummaries;
 
     public static class ViewHolder{
-        public ImageView mPoster;
         public TextView mTitle;
         public TextView mCriticTextViewFresh;
         public TextView mCriticTextViewRotten;
@@ -29,7 +27,6 @@ public class SummaryListAdapter extends ArrayAdapter<RottenTomatoesSummary> {
         public TextView mAudienceTextViewRotten;
 
         public ViewHolder(View v) {
-            mPoster = (ImageView) v.findViewById(R.id.poster_preview);
             mTitle = (TextView) v.findViewById(R.id.title_text_view);
             mCriticTextViewFresh = (TextView) v.findViewById(R.id.rating_critic_fresh);
             mCriticTextViewRotten = (TextView) v.findViewById(R.id.rating_critic_rotten);
