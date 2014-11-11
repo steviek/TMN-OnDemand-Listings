@@ -12,10 +12,10 @@ import java.util.ArrayList;
  * Created by steviekideckel on 10/30/14.
  */
 public class RottenTomatoesSummary implements Parcelable{
-    private long id;
+    private String id;
     private String title;
-    private int year;
-    private int runtime;
+    private String year;
+    private String runtime;
     private RottenTomatoesRatings ratings;
     private RottenTomatoesPosters posters;
     @SerializedName("abridged_cast")
@@ -23,11 +23,11 @@ public class RottenTomatoesSummary implements Parcelable{
     @SerializedName("alternate_ids")
     private RottenTomatoesAltId altIds;
 
-    public long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -39,19 +39,35 @@ public class RottenTomatoesSummary implements Parcelable{
         this.title = title;
     }
 
-    public int getYear() {
+    public String getYear() {
         return year;
     }
 
-    public void setYear(int year) {
+    public int getYearAsInt(){
+        try{
+            return Integer.parseInt(year);
+        }catch(NumberFormatException e){
+            return 0;
+        }
+    }
+
+    public void setYear(String year) {
         this.year = year;
     }
 
-    public int getRuntime() {
+    public String getRuntime() {
         return runtime;
     }
 
-    public void setRuntime(int runtime) {
+    public int getRuntimeAsInt(){
+        try{
+            return Integer.parseInt(runtime);
+        }catch(NumberFormatException e){
+            return 0;
+        }
+    }
+
+    public void setRuntime(String runtime) {
         this.runtime = runtime;
     }
 
@@ -94,49 +110,57 @@ public class RottenTomatoesSummary implements Parcelable{
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        long[] l = new long[1];
-        l[0] = id;
-        dest.writeLongArray(l);
-
-        String[] s = new String[1];
+        String[] s = new String[4];
         s[0] = title;
+        s[1] = id;
+        s[2] = year;
+        s[3] = runtime;
         dest.writeStringArray(s);
 
-        int[] i = new int[2];
-        i[0] = year;
-        i[1] = runtime;
-        dest.writeIntArray(i);
+        Bundle ratingsBundle = new Bundle();
+        ratingsBundle.setClassLoader(RottenTomatoesRatings.class.getClassLoader());
+        ratingsBundle.putParcelable("ratings", ratings);
+        dest.writeBundle(ratingsBundle);
 
-        Bundle b = new Bundle();
-        b.putParcelable("ratings", ratings);
-        b.putParcelable("posters", posters);
-        b.putParcelableArrayList("cast", cast);
-        b.putParcelable("alt", altIds);
-        dest.writeBundle(b);
+        Bundle posterBundle = new Bundle();
+        posterBundle.setClassLoader(RottenTomatoesPosters.class.getClassLoader());
+        posterBundle.putParcelable("posters", posters);
+        dest.writeBundle(posterBundle);
+
+        Bundle castBundle = new Bundle();
+        castBundle.setClassLoader(RottenTomatoesActorBrief.class.getClassLoader());
+        castBundle.putParcelableArrayList("cast", cast);
+        dest.writeBundle(castBundle);
+
+        Bundle altBundle = new Bundle();
+        altBundle.setClassLoader(RottenTomatoesAltId.class.getClassLoader());
+        altBundle.putParcelable("alt", altIds);
+        dest.writeBundle(altBundle);
     }
 
     public static final Creator<RottenTomatoesSummary> CREATOR = new Creator<RottenTomatoesSummary>() {
         @Override
         public RottenTomatoesSummary createFromParcel(Parcel source) {
             RottenTomatoesSummary summary = new RottenTomatoesSummary();
-            long[] l = new long[1];
-            source.readLongArray(l);
-            summary.id = l[0];
-
-            String[] s = new String[1];
+            String[] s = new String[4];
             source.readStringArray(s);
             summary.title = s[0];
+            summary.id = s[1];
+            summary.year = s[2];
+            summary.runtime = s[3];
 
-            int[] i = new int[2];
-            source.readIntArray(i);
-            summary.year = i[0];
-            summary.runtime = i[1];
+            Bundle ratingBundle = source.readBundle(RottenTomatoesRatings.class.getClassLoader());
+            summary.ratings = ratingBundle.getParcelable("ratings");
 
-            Bundle b = source.readBundle();
-            summary.ratings = b.getParcelable("ratings");
-            summary.posters = b.getParcelable("posters");
-            summary.cast = b.getParcelableArrayList("cast");
-            summary.altIds = b.getParcelable("alt");
+            Bundle postersBundle = source.readBundle(RottenTomatoesPosters.class.getClassLoader());
+            summary.posters = postersBundle.getParcelable("posters");
+
+            Bundle castBundle = source.readBundle(RottenTomatoesActorBrief.class.getClassLoader());
+            summary.cast = castBundle.getParcelableArrayList("cast");
+
+            Bundle altBundle = source.readBundle(RottenTomatoesAltId.class.getClassLoader());
+            summary.altIds = altBundle.getParcelable("alt");
+
             return summary;
         }
 

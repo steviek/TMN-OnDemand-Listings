@@ -1,13 +1,14 @@
 package com.sixbynine.movieoracle.dataprocessor;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import android.content.res.Resources;
+import android.os.AsyncTask;
+import android.util.Log;
+
+import com.sixbynine.movieoracle.SplashActivityCallback;
+import com.sixbynine.movieoracle.media.Catalogue;
+import com.sixbynine.movieoracle.media.Media;
+import com.sixbynine.movieoracle.media.Movie;
+import com.sixbynine.movieoracle.media.Series;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -19,15 +20,15 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 
-import android.content.res.Resources;
-import android.os.AsyncTask;
-import android.util.Log;
-
-import com.sixbynine.movieoracle.SplashActivityCallback;
-import com.sixbynine.movieoracle.media.Catalogue;
-import com.sixbynine.movieoracle.media.Media;
-import com.sixbynine.movieoracle.media.Movie;
-import com.sixbynine.movieoracle.media.Series;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Map;
 
 public abstract class DataProcessor {
 	public final static int IMDB_DATA_PROCESSOR = 0;
@@ -114,6 +115,27 @@ public abstract class DataProcessor {
 	    reader.read(buffer);
 	    return new String(buffer);
 	}
+
+    public static String downloadUrl(String myurl, Map<String, String> params) throws IOException{
+        if(params == null || params.size() == 0){
+            return downloadUrl(myurl);
+        }else{
+            StringBuilder query = new StringBuilder(myurl);
+            boolean first = true;
+            for(Map.Entry<String, String> entry : params.entrySet()){
+                if(!first){
+                    query.append("&");
+                }else{
+                    query.append("?");
+                }
+                first = false;
+                query.append(entry.getKey());
+                query.append("=");
+                query.append(entry.getValue());
+            }
+            return downloadUrl( query.toString());
+        }
+    }
 	
 	// Given a URL, establishes an HttpUrlConnection and retrieves
 	// the web page content as a InputStream, which it returns as

@@ -1,5 +1,6 @@
 {
 	"tmn_url":"http://www.themovienetwork.ca/ondemand/print?network=tmn",
+	"update_day":"2",
 	"exclude_prefixes":["Game Of Thrones","Funny As Hell", "Call Me Fitz", "HBO Boxing After", "Less Than Kind", "Sensitive Skin", "Silicon Valley", "Thorne: ", "True Blood", "Veep '14", "Vice '14"],
 	"populated_urls":[],
 	"series":["Call Me Fitz","Funny As Hell", "Game Of Thrones", "Girls", "Generation Kill", "Good Dog", "Good God", "Jonah From Tonga", "Leftovers, The", "Living In Your Car", "Masters Of Sex", "Nurse Jackie", "Ray Donovan", "Rogue", "Silicon Valley", "Six Feet Under", "Topless Prophet", "True Blood", "True Detective", "Vice", "Yard, The", "ZOS Zone Of Separation"]

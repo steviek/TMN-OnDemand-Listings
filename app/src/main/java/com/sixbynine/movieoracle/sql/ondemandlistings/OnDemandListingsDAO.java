@@ -1,22 +1,23 @@
 package com.sixbynine.movieoracle.sql.ondemandlistings;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.sixbynine.movieoracle.media.Catalogue;
-import com.sixbynine.movieoracle.media.Media;
-import com.sixbynine.movieoracle.media.Movie;
-import com.sixbynine.movieoracle.media.Series;
-import com.sixbynine.movieoracle.sql.ondemandlistings.OnDemandListingsContract.OnDemandListings;
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.provider.BaseColumns;
 import android.util.Log;
+
+import com.sixbynine.movieoracle.media.Catalogue;
+import com.sixbynine.movieoracle.media.Media;
+import com.sixbynine.movieoracle.media.Movie;
+import com.sixbynine.movieoracle.media.Series;
+import com.sixbynine.movieoracle.sql.ondemandlistings.OnDemandListingsContract.OnDemandListings;
+import com.sixbynine.movieoracle.util.Logger;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class OnDemandListingsDAO {
 	private static OnDemandListingsDAO me;
@@ -86,9 +87,7 @@ public class OnDemandListingsDAO {
 			
 			
 			if(db.insert(OnDemandListings.TABLE_NAME, null, values) == -1){
-				Log.i(this.getClass().getName(), "Failed to store " + m.getTitle() + " in " + OnDemandListings.TABLE_NAME);
-			}else{
-				Log.i(this.getClass().getName(), "Successfully stored " + m.getTitle() + " in " + OnDemandListings.TABLE_NAME);
+				Logger.w("Failed to store " + m.getTitle() + " in " + OnDemandListings.TABLE_NAME);
 			}
 		}
 		saved = true;

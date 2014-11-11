@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -50,8 +51,9 @@ public class WebResources {
 		     String json_data = response.toString();
 		     
 		     JSONObject obj = new JSONObject(json_data);
-
 		     Prefs.saveTmnUrl(obj.getString("tmn_url"));
+
+             Prefs.saveUpdateDay(obj.optInt("update_day", Calendar.TUESDAY));
 
 		     JSONArray excludeArr = obj.getJSONArray("exclude_prefixes");
              HashSet<String> excludeList = new HashSet<String>(excludeArr.length());

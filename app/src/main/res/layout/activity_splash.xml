@@ -2,31 +2,40 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:gravity="center"
-    tools:context=".SplashActivity" >
+    android:orientation="vertical"
+    tools:context=".SplashActivity">
 
-    
+
     <ImageView
         android:id="@+id/imageView1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:visibility="gone"
         android:src="@drawable/ic_launcher" />
 
-        <ProgressBar
-              android:id="@+id/progress_bar"
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="150dp"
+        android:layout_height="150dp" />
+
+    <TextView
+        android:id="@+id/progress_number_text_view"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_width="match_parent" 
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_margin="10dp"  />
-        
-        <TextView
-            android:id="@+id/tv_main_activity"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:text=""
-            android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:gravity="center_horizontal"
+        android:padding="16dp"
+        android:textSize="26sp"
+        android:text="23/45" />
+
+    <TextView
+        android:id="@+id/progress_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:textSize="18sp"
+        android:padding="10dp"
+        android:text="Loading" />
 
 </LinearLayout>

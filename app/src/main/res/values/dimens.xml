@@ -11,4 +11,7 @@
     <integer name="num_cols">1</integer>
 
     <dimen name="row_height">72dp</dimen>
+
+    <!-- ELEVATION CONSTANTS -->
+    <dimen name="toolbar_elevation">4dp</dimen>
 </resources>

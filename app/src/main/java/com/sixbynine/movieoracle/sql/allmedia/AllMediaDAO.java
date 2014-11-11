@@ -15,6 +15,7 @@ import com.sixbynine.movieoracle.media.Movie;
 import com.sixbynine.movieoracle.media.Rating;
 import com.sixbynine.movieoracle.media.Series;
 import com.sixbynine.movieoracle.sql.allmedia.AllMediaContract.AllMedia;
+import com.sixbynine.movieoracle.util.Logger;
 
 public class AllMediaDAO {
 	private static AllMediaDAO me;
@@ -267,9 +268,7 @@ public class AllMediaDAO {
 				values.put(AllMedia.COLUMN_NAME_SERIES, (m instanceof Series)? "1" : "0");
 				long rc = db.insert(AllMedia.TABLE_NAME, null, values);
 				if(rc == -1){
-					Log.w(this.getClass().getName(), "Failed to store " + m.getTitle() + " into the database");
-				}else{
-					Log.i(this.getClass().getName(), "Successfully stored " + m.getTitle() + " into " + AllMedia.TABLE_NAME);
+					Logger.w("Failed to store " + m.getTitle() + " into the database");
 				}
 			}
 			saved = true;

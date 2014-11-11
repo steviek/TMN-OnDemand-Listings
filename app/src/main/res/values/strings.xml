@@ -81,4 +81,6 @@
     <string name="drawer_open">Drawer Open</string>
     <string name="drawer_close">Drawer Open</string>
 
+    <string name="loaded">Loaded %1$s</string>
+
 </resources>

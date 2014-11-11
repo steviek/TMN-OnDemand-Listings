@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -20,18 +19,22 @@ import android.widget.Toast;
 import com.sixbynine.movieoracle.dataprocessor.DataProcessor;
 import com.sixbynine.movieoracle.dataprocessor.MovieNetworkDataProcessor;
 import com.sixbynine.movieoracle.dataprocessor.WebResources;
+import com.sixbynine.movieoracle.home.HomeActivity;
+import com.sixbynine.movieoracle.manager.RottenTomatoesManager;
+import com.sixbynine.movieoracle.manager.UpdateEvent;
+import com.sixbynine.movieoracle.manager.UpdateListener;
 import com.sixbynine.movieoracle.media.Catalogue;
-import com.sixbynine.movieoracle.rt.RottenTomatoesRestClient;
+import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
 import com.sixbynine.movieoracle.sql.allmedia.AllMediaDAO;
 import com.sixbynine.movieoracle.sql.ondemandlistings.OnDemandListingsDAO;
-import com.sixbynine.movieoracle.util.CatalogueHolder;
 import com.sixbynine.movieoracle.util.Prefs;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 
-public class SplashActivity extends ActionBarActivity implements SplashActivityCallback{
+public class SplashActivity extends ActionBarActivity implements SplashActivityCallback, UpdateListener{
 
 	private Catalogue catalogue;
 	private Catalogue allMediaDB;
@@ -46,6 +49,8 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 	private DataProcessor movieDP;
 	private DataProcessor seriesDP;
 	private ProgressBar pb;
+    private TextView mProgressNumberTextView;
+    private TextView mProgressTextView;
 	
 	public static SplashActivityCallback cb;
 	
@@ -58,9 +63,12 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 		pb = (ProgressBar) findViewById(R.id.progress_bar);
 		cb = this;
 		if(!mediaDataLoaded) {
-			pb.setVisibility(View.VISIBLE);
-			pb.setMax(100);
+            mProgressNumberTextView = (TextView) findViewById(R.id.progress_number_text_view);
+            mProgressTextView = (TextView) findViewById(R.id.progress_text_view);
 			loadListings(false);
+
+
+
 		}else{
 			callMain();
 			pb.setVisibility(View.GONE);
@@ -83,10 +91,19 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 		
 	}
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        RottenTomatoesManager.getInstance().subscribe(this);
+    }
 
-	
+    @Override
+    protected void onPause() {
+        super.onPause();
+        RottenTomatoesManager.getInstance().unSubscribe(this);
+    }
 
-	@Override
+    @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.activity_splash, menu);
@@ -105,7 +122,7 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 			 return false;
 		 }
 		 pb.setVisibility(View.VISIBLE);
-		 ((TextView) findViewById(R.id.tv_main_activity)).setVisibility(View.VISIBLE);
+         mProgressTextView.setVisibility(View.VISIBLE);
 		 
 		 
 		 listingsLoaded = false;
@@ -122,7 +139,7 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 				
 				@Override
 				public void onSuccess() {
-					((TextView) findViewById(R.id.tv_main_activity)).setText("Checking the internet for listings.");
+					((TextView) findViewById(R.id.progress_text_view)).setText("Checking the internet for listings.");
 					 mndp = new MovieNetworkDataProcessor(SplashActivity.this); // will initialize an object and fetches the data from the movie network site
 					 mndp.repopulate();
 				}
@@ -135,9 +152,10 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 			});
 			 
 		 }else{
-			 //TODO: make call to async task
-			 
-			this.notifyChange(SplashActivityCallback.MOVIE_NETWORK_DATABASE_FINISHED);
+             Intent intent = new Intent(this, HomeActivity.class);
+             intent.putParcelableArrayListExtra("summaries", Prefs.getCurrentSummaries());
+             startActivity(intent);
+             finish();
 		 }
 
 		 return hasInternet();
@@ -153,8 +171,6 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 	/* DATA PROCESSOR CALLBACK METHODS */
 	@Override
 	public void notifyChange(int status) {
-		TextView tv = (TextView) findViewById(R.id.tv_main_activity);
-		
 		if(status == SplashActivityCallback.MOVIE_NETWORK_INTERNET_FINISHED){
 			onDemandListings = mndp.retrieveListings();
 			listingsLoaded = true;
@@ -168,20 +184,12 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 			AllMediaDAO.init(getApplicationContext(), this); //start loading data
 			
 		}else if(status == SplashActivityCallback.NEW_UNMATCHED_MEDIA_RETRIEVED){
-			pb.setProgress((movieDP.getProgress() + seriesDP.getProgress())/2);
-			
-			tv.setText("Retrieving data for new movies and series."
+            mProgressTextView.setText("Retrieving data for new movies and series."
 					+ "\n\nIf this is the first time running the app this may take a couple of minutes.");
 		}else if(status == SplashActivityCallback.NEW_ALL_MEDIA_DATABASE_ENTRY_LOADED){
 			AllMediaDAO dao = AllMediaDAO.getInstance();
-			if(dao.isSaved()){
-				pb.setProgress(pb.getMax());
-			}else{
-				pb.setProgress(dao.getProgress());
-			}
-			tv.setText("Retrieving saved data for movies and series.");
+            mProgressTextView.setText("Retrieving saved data for movies and series.");
 		}else if(status == SplashActivityCallback.ALL_MEDIA_CATALOGUE_DATABASE_FINISHED ){
-			pb.setProgress(0);
 			allMediaDB = AllMediaDAO.getInstance().getCatalogue();
 			Catalogue[] mergeResult = Catalogue.merge(onDemandListings, allMediaDB);
 			catalogue = mergeResult[0];
@@ -191,8 +199,8 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 					movieDP = null;
 					seriesDP = null;
 					movieDP = DataProcessor.createDataProcessor(DataProcessor.ROTTEN_TOMATOES_DATA_PROCESSOR, this);
-                RottenTomatoesRestClient.getMovies(mergeResult[1].getMovies());
-                movieDP.populate(getResources(), mergeResult[1].getMovies());
+                RottenTomatoesManager.getInstance().loadListings(mergeResult[1].getMovies());
+                //movieDP.populate(getResources(), mergeResult[1].getMovies());
 
 				//}
 				//if(seriesDP == null || !seriesDP.isInitialized()) {
@@ -211,9 +219,8 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 					catalogue.addAll(movieDP.retrieveCatalogue());
 					catalogue.addAll(seriesDP.retrieveCatalogue());
 					AllMediaDAO.getInstance().saveCatalogue(catalogue.trimDuplicates());
-					tv.setText("");
-					tv.setVisibility(View.GONE);
-					pb.setProgress(pb.getMax());
+                    mProgressTextView.setText("");
+                    mProgressTextView.setVisibility(View.GONE);
 					pb.setVisibility(View.GONE);
 					((ImageView) findViewById(R.id.imageView1)).setVisibility(View.GONE);
 					catalogue = catalogue.trimDuplicates();
@@ -222,9 +229,8 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 				}
 			}else{
 				mediaDataLoaded = true;
-				tv.setText("");
-				tv.setVisibility(View.INVISIBLE);
-				pb.setProgress(pb.getMax());
+                mProgressTextView.setText("");
+                mProgressTextView.setVisibility(View.INVISIBLE);
 				pb.setVisibility(View.INVISIBLE);
 				((ImageView) findViewById(R.id.imageView1)).setVisibility(View.GONE);
 				catalogue = catalogue.trimDuplicates();
@@ -238,13 +244,13 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 	}
 	
 	public void callMain(){
-		CatalogueHolder.getInstance().setCatalogue(catalogue);
+		/*CatalogueHolder.getInstance().setCatalogue(catalogue);
 		Intent intent = new Intent(this, MainActivity.class);
 		intent.putExtra("catalogue", (Parcelable) catalogue);
 		//intent.putExtra(MainActivity.FREQUENCY, checkOnDemandFrequency);
 		//intent.putExtra(MainActivity.NUM_TOP_RATED, showTopRatedNumber);
 		startActivity(intent);
-		finish();
+		finish();*/
 	}
 	
 	private boolean onDemandListingsAreStale(){
@@ -288,5 +294,26 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
             return super.onKeyDown(keyCode, event);
         }
     }
-	
+
+    @Override
+    public void update(UpdateEvent e, Object... data) {
+        switch(e){
+            case RT_LISTINGS_LOADED:
+                saveUpdateDate();
+                ArrayList<RottenTomatoesSummary> summaries = (ArrayList<RottenTomatoesSummary>) data[0];
+                Intent intent = new Intent(this, HomeActivity.class);
+                intent.putParcelableArrayListExtra("summaries", summaries);
+                startActivity(intent);
+                finish();
+                break;
+            case RT_LISTING_LOADED:
+                String title = (String) data[0];
+                int soFar = (Integer) data[1];
+                int total = (Integer) data[2];
+                mProgressNumberTextView.setText(soFar + "/" + total);
+                mProgressTextView.setText(getString(R.string.loaded, title));
+                break;
+
+        }
+    }
 }
