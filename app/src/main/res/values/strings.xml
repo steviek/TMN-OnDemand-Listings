@@ -83,4 +83,9 @@
 
     <string name="loaded">Loaded %1$s</string>
 
+    <!-- DISPLAY VIDEO -->
+    <string name="n_minutes">%1$d minutes</string>
+    <string name="cast"><b>Cast:</b> %1$s</string>
+    <string name="synopsis"><b>Synopsis:</b> %1$s</string>
+
 </resources>

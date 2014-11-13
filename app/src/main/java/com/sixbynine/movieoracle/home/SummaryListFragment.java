@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.sixbynine.movieoracle.R;
@@ -26,7 +27,7 @@ public class SummaryListFragment extends ActionBarFragment{
     private Callback mCallback;
 
     public interface Callback{
-
+        public void onItemSelected(RottenTomatoesSummary item);
     }
 
     public static SummaryListFragment newInstance(ArrayList<RottenTomatoesSummary> summaries){
@@ -71,6 +72,12 @@ public class SummaryListFragment extends ActionBarFragment{
 
         mAdapter = new SummaryListAdapter(getActivity(), mSummaries);
         mListView.setAdapter(mAdapter);
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if(mCallback != null) mCallback.onItemSelected(mSummaries.get(position));
+            }
+        });
 
         return view;
     }

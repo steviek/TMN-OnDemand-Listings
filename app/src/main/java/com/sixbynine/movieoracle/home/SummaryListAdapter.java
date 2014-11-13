@@ -83,7 +83,7 @@ public class SummaryListAdapter extends ArrayAdapter<RottenTomatoesSummary> {
         }else if(audienceScore > 0){
             viewHolder.mAudienceTextViewFresh.setVisibility(View.GONE);
             viewHolder.mAudienceTextViewRotten.setVisibility(View.VISIBLE);
-            viewHolder.mAudienceTextViewFresh.setText(audienceScore + "%");
+            viewHolder.mAudienceTextViewRotten.setText(audienceScore + "%");
         }else{
             viewHolder.mAudienceTextViewFresh.setVisibility(View.GONE);
             viewHolder.mAudienceTextViewRotten.setVisibility(View.INVISIBLE);

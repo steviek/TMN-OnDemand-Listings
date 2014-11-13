@@ -17,6 +17,7 @@ public class HomeActivity extends BaseActivity implements SummaryListFragment.Ca
 
     private ArrayList<RottenTomatoesSummary> mSummaries;
     private SummaryListFragment mSummaryListFragment;
+    private DisplayFragment mDisplayFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,4 +49,19 @@ public class HomeActivity extends BaseActivity implements SummaryListFragment.Ca
             return lhs.getTitle().compareTo(rhs.getTitle());
         }
     };
+
+    @Override
+    public void onItemSelected(RottenTomatoesSummary item) {
+        mDisplayFragment = DisplayFragment.newInstance(item);
+        getSupportFragmentManager().beginTransaction().replace(R.id.content, mDisplayFragment).commit();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(mDisplayFragment.isAdded() && mDisplayFragment.isVisible()){
+            getSupportFragmentManager().beginTransaction().replace(R.id.content, mSummaryListFragment).commit();
+        }else{
+            super.onBackPressed();
+        }
+    }
 }
