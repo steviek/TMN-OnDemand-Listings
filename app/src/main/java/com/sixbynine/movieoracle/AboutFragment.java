@@ -14,7 +14,7 @@ import android.widget.TextView;
 
 import com.sixbynine.movieoracle.ui.fragment.ActionBarFragment;
 
-
+//TODO put acknowledgement somewhere
 public class AboutFragment extends ActionBarFragment {
 
 	

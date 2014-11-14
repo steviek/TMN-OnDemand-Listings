@@ -13,7 +13,7 @@ import android.widget.TextView;
 
 import com.sixbynine.movieoracle.list.MoviesListFragment;
 import com.sixbynine.movieoracle.ui.fragment.ActionBarListFragment;
-
+@Deprecated
 public class MenuFragment extends ActionBarListFragment{
 	private MainActivity parent;
 	private static final int MOVIES_INDEX = 0;

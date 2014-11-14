@@ -1,8 +1,10 @@
 package com.sixbynine.movieoracle.home;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import com.sixbynine.movieoracle.R;
+import com.sixbynine.movieoracle.display.DisplayActivity;
 import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
 import com.sixbynine.movieoracle.ui.activity.BaseActivity;
 
@@ -52,8 +54,15 @@ public class HomeActivity extends BaseActivity implements SummaryListFragment.Ca
 
     @Override
     public void onItemSelected(RottenTomatoesSummary item) {
-        mDisplayFragment = DisplayFragment.newInstance(item);
-        getSupportFragmentManager().beginTransaction().replace(R.id.content, mDisplayFragment).commit();
+        if(findViewById(R.id.secondary_content) == null){
+            Intent intent = new Intent(this, DisplayActivity.class);
+            intent.putExtra("summary", item);
+            startActivity(intent);
+        }else{
+            mDisplayFragment = DisplayFragment.newInstance(item);
+            getSupportFragmentManager().beginTransaction().replace(R.id.secondary_content, mDisplayFragment).commit();
+        }
+
     }
 
     @Override

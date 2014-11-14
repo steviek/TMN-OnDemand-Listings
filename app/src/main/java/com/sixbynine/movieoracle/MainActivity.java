@@ -23,6 +23,7 @@ import com.sixbynine.movieoracle.sql.allmedia.AllMediaDAO;
 import com.sixbynine.movieoracle.sql.ondemandlistings.OnDemandListingsDAO;
 import com.sixbynine.movieoracle.util.Keys;
 
+@Deprecated
 public class MainActivity extends ActionBarActivity implements MediaListViewListener{
 	public static final String TITLES_LIST = "titles_list";
 	public static final String FREQUENCY = "frequency";

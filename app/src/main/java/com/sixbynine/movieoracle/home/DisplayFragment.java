@@ -1,5 +1,6 @@
 package com.sixbynine.movieoracle.home;
 
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -9,6 +10,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.sixbynine.movieoracle.R;
+import com.sixbynine.movieoracle.manager.RottenTomatoesManager;
+import com.sixbynine.movieoracle.manager.UpdateEvent;
+import com.sixbynine.movieoracle.manager.UpdateListener;
 import com.sixbynine.movieoracle.object.RottenTomatoesActorBrief;
 import com.sixbynine.movieoracle.object.RottenTomatoesRatings;
 import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
@@ -17,7 +21,7 @@ import com.sixbynine.movieoracle.ui.fragment.ActionBarFragment;
 /**
  * Created by steviekideckel on 11/11/14.
  */
-public class DisplayFragment extends ActionBarFragment{
+public class DisplayFragment extends ActionBarFragment implements UpdateListener{
 
     private ImageView mPoster;
     private TextView mTitle;
@@ -50,6 +54,19 @@ public class DisplayFragment extends ActionBarFragment{
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        RottenTomatoesManager.getInstance().subscribe(this);
+        RottenTomatoesManager.getInstance().getPoster(mSummary);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        RottenTomatoesManager.getInstance().unSubscribe(this);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_display, container, false);
 
@@ -73,15 +90,38 @@ public class DisplayFragment extends ActionBarFragment{
     public void setSummary(RottenTomatoesSummary summary){
         mSummary = summary;
         mTitle.setText(mSummary.getTitle());
-        mRuntime.setText(getString(R.string.n_minutes, mSummary.getRuntimeAsInt()));
-        mYear.setText(mSummary.getYear());
 
-        StringBuilder sb = new StringBuilder();
-        for(RottenTomatoesActorBrief actor : mSummary.getCast()){
-            sb.append(actor.getName()).append(",");
+        if(mSummary.getRuntimeAsInt() > 0){
+            mRuntime.setText(getString(R.string.n_minutes, mSummary.getRuntimeAsInt()));
+        }else{
+            mRuntime.setVisibility(View.INVISIBLE);
         }
-        sb.deleteCharAt(sb.length()-1);
-        mCast.setText(getString(R.string.cast, sb.toString()));
+
+        if(mSummary.getYearAsInt() > 0){
+            mYear.setText(mSummary.getYear());
+        }else{
+            mYear.setVisibility(View.INVISIBLE);
+        }
+
+
+        if(mSummary.getCast() == null || mSummary.getCast().isEmpty()){
+            mCast.setVisibility(View.GONE);
+        }else{
+            StringBuilder sb = new StringBuilder();
+            for(RottenTomatoesActorBrief actor : mSummary.getCast()){
+                sb.append(actor.getName()).append(",\n");
+            }
+            sb.deleteCharAt(sb.length()-1);
+            sb.deleteCharAt(sb.length()-1);
+            mCast.setText(getString(R.string.cast, sb.toString()));
+        }
+
+        if(mSummary.getSynopsis() == null || mSummary.getSynopsis().isEmpty()){
+            mSynopsis.setVisibility(View.GONE);
+        }else{
+            mSynopsis.setText(getString(R.string.synopsis, mSummary.getSynopsis()));
+        }
+
 
         RottenTomatoesRatings ratings = mSummary.getRatings();
         if(ratings != null){
@@ -115,6 +155,21 @@ public class DisplayFragment extends ActionBarFragment{
             }
         }else{
             mRatingsContainer.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
+    public void update(UpdateEvent e, Object... data) {
+        switch(e){
+            case POSTER_LOADED:
+                if(((RottenTomatoesSummary) data[0]).getId().equals(mSummary.getId())){
+                    mPoster.setImageBitmap((Bitmap) data[1]);
+                }
+                break;
+            case POSTER_FAILED_TO_LOAD:
+                if(((RottenTomatoesSummary) data[0]).getId().equals(mSummary.getId())){
+                }
+                break;
         }
     }
 }

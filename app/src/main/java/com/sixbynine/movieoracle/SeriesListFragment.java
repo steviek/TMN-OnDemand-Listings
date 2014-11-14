@@ -14,7 +14,7 @@ import com.sixbynine.movieoracle.media.Media;
 import com.sixbynine.movieoracle.ui.fragment.ActionBarListFragment;
 
 import java.util.ArrayList;
-
+@Deprecated
 public class SeriesListFragment extends ActionBarListFragment {
 	private Catalogue allListings;
 	private ArrayList<Media> displayListings;
