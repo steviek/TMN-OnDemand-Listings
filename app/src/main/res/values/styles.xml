@@ -16,4 +16,30 @@
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
     </style>
 
+    <style name="DisplayTheme"/>
+    <style name="DisplayTheme.Header">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">2dp</item>
+        <item name="android:textSize">@dimen/text_size_medium_3</item>
+        <item name="android:layout_marginTop">10dp</item>
+    </style>
+
+    <style name="DisplayTheme.Divider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1.5dp</item>
+        <item name="android:background">#888888</item>
+        <item name="android:layout_marginBottom">8dp</item>
+    </style>
+
+    <style name="DisplayTheme.Text">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:singleLine">false</item>
+        <item name="android:textSize">@dimen/text_size_medium_2</item>
+    </style>
+
+
+
 </resources>

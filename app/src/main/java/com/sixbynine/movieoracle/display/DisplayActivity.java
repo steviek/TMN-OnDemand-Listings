@@ -4,13 +4,14 @@ import android.os.Bundle;
 
 import com.sixbynine.movieoracle.R;
 import com.sixbynine.movieoracle.home.DisplayFragment;
+import com.sixbynine.movieoracle.object.RottenTomatoesActorBrief;
 import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
 import com.sixbynine.movieoracle.ui.activity.BaseActivity;
 
 /**
  * Created by steviekideckel on 11/13/14.
  */
-public class DisplayActivity extends BaseActivity{
+public class DisplayActivity extends BaseActivity implements DisplayFragment.Callback{
 
     private DisplayFragment mDisplayFragment;
 
@@ -22,5 +23,10 @@ public class DisplayActivity extends BaseActivity{
         RottenTomatoesSummary summary = getIntent().getParcelableExtra("summary");
         mDisplayFragment = DisplayFragment.newInstance(summary);
         getSupportFragmentManager().beginTransaction().replace(R.id.content, mDisplayFragment).commit();
+    }
+
+    @Override
+    public void onActorClicked(RottenTomatoesActorBrief actor) {
+
     }
 }

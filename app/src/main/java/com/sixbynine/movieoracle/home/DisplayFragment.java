@@ -1,8 +1,12 @@
 package com.sixbynine.movieoracle.home;
 
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.GridLayout;
+import android.text.SpannableString;
+import android.text.style.UnderlineSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,11 +35,31 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
     private TextView mCriticRotten;
     private TextView mAudienceFresh;
     private TextView mAudienceRotten;
-    private TextView mSynopsis;
-    private TextView mCast;
+    private TextView mSynopsisHeader;
+    private TextView mSynopsisBody;
+    private View mSynopsisDivider;
+    private TextView mCastHeader;
+    private GridLayout mCastContainer;
+    //private TextView mCastBody;
+    private View mCastDivider;
     private ViewGroup mRatingsContainer;
 
     private RottenTomatoesSummary mSummary;
+    private Callback mCallback;
+
+    public interface Callback{
+        public void onActorClicked(RottenTomatoesActorBrief actor);
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if(activity instanceof Callback){
+            mCallback = (Callback) activity;
+        }else{
+            throw new ClassCastException(activity.toString() + " must implement Callback interface");
+        }
+    }
 
     public static DisplayFragment newInstance(RottenTomatoesSummary summary){
         DisplayFragment frag = new DisplayFragment();
@@ -78,13 +102,23 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
         mCriticRotten = (TextView) view.findViewById(R.id.critic_rotten_text_view);
         mAudienceFresh = (TextView) view.findViewById(R.id.audience_fresh_text_view);
         mAudienceRotten = (TextView) view.findViewById(R.id.audience_rotten_text_view);
-        mSynopsis = (TextView) view.findViewById(R.id.synopsis_text_view);
-        mCast = (TextView) view.findViewById(R.id.cast_text_view);
+        mSynopsisHeader = (TextView) view.findViewById(R.id.synopsis_header);
+        mSynopsisDivider = view.findViewById(R.id.synopsis_divider);
+        mSynopsisBody = (TextView) view.findViewById(R.id.synopsis_text);
+        mCastHeader = (TextView) view.findViewById(R.id.cast_header);
+        mCastDivider = view.findViewById(R.id.cast_divider);
+        mCastContainer = (GridLayout) view.findViewById(R.id.cast_container);
         mRatingsContainer = (ViewGroup) view.findViewById(R.id.ratings_container);
 
-        setSummary(mSummary);
+
 
         return view;
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        setSummary(mSummary);
     }
 
     public void setSummary(RottenTomatoesSummary summary){
@@ -105,21 +139,31 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
 
 
         if(mSummary.getCast() == null || mSummary.getCast().isEmpty()){
-            mCast.setVisibility(View.GONE);
+            hideCast();
         }else{
-            StringBuilder sb = new StringBuilder();
+            showCast();
+            mCastContainer.removeAllViews();
             for(RottenTomatoesActorBrief actor : mSummary.getCast()){
-                sb.append(actor.getName()).append(",\n");
+                TextView textView = (TextView) getActionBarActivity().getLayoutInflater().inflate(R.layout.text_view_actor, null);
+                textView.setTag(actor);
+                SpannableString string = new SpannableString(actor.getName());
+                string.setSpan(new UnderlineSpan(), 0, string.length(), 0);
+                textView.setText(string);
+                mCastContainer.addView(textView);
+                textView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mCallback.onActorClicked((RottenTomatoesActorBrief) v.getTag());
+                    }
+                });
             }
-            sb.deleteCharAt(sb.length()-1);
-            sb.deleteCharAt(sb.length()-1);
-            mCast.setText(getString(R.string.cast, sb.toString()));
         }
 
         if(mSummary.getSynopsis() == null || mSummary.getSynopsis().isEmpty()){
-            mSynopsis.setVisibility(View.GONE);
+            hideSynopsis();
         }else{
-            mSynopsis.setText(getString(R.string.synopsis, mSummary.getSynopsis()));
+            showSynopsis();
+            mSynopsisBody.setText(mSummary.getSynopsis());
         }
 
 
@@ -156,6 +200,30 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
         }else{
             mRatingsContainer.setVisibility(View.GONE);
         }
+    }
+
+    private void hideCast(){
+        mCastDivider.setVisibility(View.GONE);
+        mCastHeader.setVisibility(View.GONE);
+        mCastContainer.setVisibility(View.GONE);
+    }
+
+    private void showCast(){
+        mCastDivider.setVisibility(View.VISIBLE);
+        mCastHeader.setVisibility(View.VISIBLE);
+        mCastContainer.setVisibility(View.VISIBLE);
+    }
+
+    private void hideSynopsis(){
+        mSynopsisBody.setVisibility(View.GONE);
+        mSynopsisDivider.setVisibility(View.GONE);
+        mSynopsisHeader.setVisibility(View.GONE);
+    }
+
+    private void showSynopsis(){
+        mSynopsisBody.setVisibility(View.VISIBLE);
+        mSynopsisDivider.setVisibility(View.VISIBLE);
+        mSynopsisHeader.setVisibility(View.VISIBLE);
     }
 
     @Override

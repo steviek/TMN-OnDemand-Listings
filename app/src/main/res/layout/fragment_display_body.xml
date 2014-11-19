@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/synopsis_header"
+        android:text="@string/synopsis"
+        style="@style/DisplayTheme.Header"/>
+
+    <View
+        android:id="@+id/synopsis_divider"
+        style="@style/DisplayTheme.Divider"/>
+
+    <TextView
+        android:id="@+id/synopsis_text"
+        style="@style/DisplayTheme.Text"/>
+
+    <TextView
+        android:id="@+id/cast_header"
+        android:text="@string/cast"
+        style="@style/DisplayTheme.Header"/>
+
+    <View
+        android:id="@+id/cast_divider"
+        style="@style/DisplayTheme.Divider"/>
+
+    <android.support.v7.widget.GridLayout
+        android:id="@+id/cast_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center_horizontal"
+        app:useDefaultMargins="true"
+        app:alignmentMode="alignBounds"
+        app:columnOrderPreserved="false"
+        app:columnCount="@integer/display_column_count"/>
+
+</LinearLayout>

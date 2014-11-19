@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import com.sixbynine.movieoracle.R;
 import com.sixbynine.movieoracle.display.DisplayActivity;
+import com.sixbynine.movieoracle.object.RottenTomatoesActorBrief;
 import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
 import com.sixbynine.movieoracle.ui.activity.BaseActivity;
 
@@ -15,7 +16,7 @@ import java.util.Comparator;
 /**
  * Created by steviekideckel on 11/2/14.
  */
-public class HomeActivity extends BaseActivity implements SummaryListFragment.Callback{
+public class HomeActivity extends BaseActivity implements SummaryListFragment.Callback, DisplayFragment.Callback{
 
     private ArrayList<RottenTomatoesSummary> mSummaries;
     private SummaryListFragment mSummaryListFragment;
@@ -72,5 +73,10 @@ public class HomeActivity extends BaseActivity implements SummaryListFragment.Ca
         }else{
             super.onBackPressed();
         }
+    }
+
+    @Override
+    public void onActorClicked(RottenTomatoesActorBrief actor) {
+
     }
 }

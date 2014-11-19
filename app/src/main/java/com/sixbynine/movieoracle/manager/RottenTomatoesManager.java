@@ -1,16 +1,13 @@
 package com.sixbynine.movieoracle.manager;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
-import android.util.Log;
 
 import com.sixbynine.movieoracle.media.Catalogue;
 import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
 import com.sixbynine.movieoracle.rt.RottenTomatoesRestClient;
+import com.sixbynine.movieoracle.util.BitmapDownloader;
 import com.sixbynine.movieoracle.util.Prefs;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 
 /**
@@ -19,6 +16,7 @@ import java.util.ArrayList;
 public class RottenTomatoesManager extends Manager{
     private static RottenTomatoesManager sInstance;
     private ArrayList<RottenTomatoesSummary> mSummaries;
+    private BitmapDownloader<RottenTomatoesSummary> mPosterDownloader;
 
     public static RottenTomatoesManager getInstance(){
         if(sInstance == null){
@@ -29,6 +27,26 @@ public class RottenTomatoesManager extends Manager{
             }
         }
         return sInstance;
+    }
+
+    public RottenTomatoesManager(){
+        mPosterDownloader = new BitmapDownloader<RottenTomatoesSummary>() {
+            @Override
+            protected String getUrl(RottenTomatoesSummary object) {
+                String urldisplay = object.getPosters().getDetailed();
+                return urldisplay.replace("tmb","det");
+            }
+
+            @Override
+            protected void onSuccess(RottenTomatoesSummary rottenTomatoesSummary, Bitmap bmp) {
+                publish(UpdateEvent.POSTER_LOADED, rottenTomatoesSummary, bmp);
+            }
+
+            @Override
+            protected void onFailure(RottenTomatoesSummary rottenTomatoesSummary) {
+                publish(UpdateEvent.POSTER_FAILED_TO_LOAD, rottenTomatoesSummary);
+            }
+        };
     }
 
     public ArrayList<RottenTomatoesSummary> getSummaries(){
@@ -61,48 +79,8 @@ public class RottenTomatoesManager extends Manager{
     }
 
     public void getPoster(RottenTomatoesSummary summary){
-        new DownloadImageTask(summary).execute();
+        mPosterDownloader.loadImage(summary);
     }
 
-    private class DownloadImageTask extends AsyncTask<Void, Void, Bitmap> {
-
-        private RottenTomatoesSummary mSummary;
-
-        public DownloadImageTask(RottenTomatoesSummary summary){
-            mSummary = summary;
-        }
-
-        protected Bitmap doInBackground(Void... urls) {
-            String urldisplay = mSummary.getPosters().getDetailed();
-            Bitmap bmp = null;
-            try {
-                String urlGoodOne = urldisplay.replace("tmb","det");
-                InputStream in = new java.net.URL(urlGoodOne).openStream();
-                bmp = BitmapFactory.decodeStream(in);
-            } catch (Exception e) {
-                Log.e("Error", e.getMessage());
-                e.printStackTrace();
-            }
-
-            if(bmp == null){
-                try {
-                    InputStream in = new java.net.URL(urldisplay).openStream();
-                    bmp = BitmapFactory.decodeStream(in);
-                } catch (Exception e) {
-                    Log.e("Error", e.getMessage());
-                    e.printStackTrace();
-                }
-            }
-            return bmp;
-        }
-
-        protected void onPostExecute(Bitmap result) {
-            if(result != null){
-                publish(UpdateEvent.POSTER_LOADED, mSummary, result);
-            }else{
-                publish(UpdateEvent.POSTER_FAILED_TO_LOAD, mSummary);
-            }
-        }
-    }
 
 }
