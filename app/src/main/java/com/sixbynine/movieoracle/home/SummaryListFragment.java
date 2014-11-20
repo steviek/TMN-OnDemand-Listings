@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
@@ -23,11 +24,13 @@ public class SummaryListFragment extends ActionBarFragment{
     private ListView mListView;
     private SummaryListAdapter mAdapter;
 
-    private ArrayList<RottenTomatoesSummary> mSummaries;
+    private ArrayList<RottenTomatoesSummary> mAllSummaries;
+    private ArrayList<RottenTomatoesSummary> mDisplaySummaries;
     private Callback mCallback;
 
     public interface Callback{
         public void onItemSelected(RottenTomatoesSummary item);
+        public void onItemMovedToTop(RottenTomatoesSummary item);
     }
 
     public static SummaryListFragment newInstance(ArrayList<RottenTomatoesSummary> summaries){
@@ -52,17 +55,20 @@ public class SummaryListFragment extends ActionBarFragment{
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if(savedInstanceState == null){
-            mSummaries = getArguments().getParcelableArrayList("summaries");
+            mAllSummaries = getArguments().getParcelableArrayList("summaries");
+            mDisplaySummaries = new ArrayList<RottenTomatoesSummary>(mAllSummaries);
         }else{
-            mSummaries = savedInstanceState.getParcelableArrayList("summaries");
+            mAllSummaries = savedInstanceState.getParcelableArrayList("summaries");
         }
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList("summaries", mSummaries);
+        outState.putParcelableArrayList("summaries", mAllSummaries);
     }
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -70,14 +76,31 @@ public class SummaryListFragment extends ActionBarFragment{
 
         mListView = (ListView) view.findViewById(R.id.list_view);
 
-        mAdapter = new SummaryListAdapter(getActivity(), mSummaries);
+        mAdapter = new SummaryListAdapter(getActivity(), mDisplaySummaries);
         mListView.setAdapter(mAdapter);
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if(mCallback != null) mCallback.onItemSelected(mSummaries.get(position));
+                if(mCallback != null) mCallback.onItemSelected(mDisplaySummaries.get(position));
             }
         });
+        mListView.setOnScrollListener(new AbsListView.OnScrollListener() {
+            int lastFirstVisibleItem;
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                if(firstVisibleItem != lastFirstVisibleItem){
+                    lastFirstVisibleItem = firstVisibleItem;
+                    mCallback.onItemMovedToTop(mDisplaySummaries.get(firstVisibleItem));
+                }
+            }
+        });
+
+
 
         return view;
     }

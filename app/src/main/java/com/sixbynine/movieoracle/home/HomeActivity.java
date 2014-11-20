@@ -2,6 +2,7 @@ package com.sixbynine.movieoracle.home;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.graphics.Palette;
 
 import com.sixbynine.movieoracle.R;
 import com.sixbynine.movieoracle.display.DisplayActivity;
@@ -21,6 +22,7 @@ public class HomeActivity extends BaseActivity implements SummaryListFragment.Ca
     private ArrayList<RottenTomatoesSummary> mSummaries;
     private SummaryListFragment mSummaryListFragment;
     private DisplayFragment mDisplayFragment;
+    private boolean mMultiPane;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +34,8 @@ public class HomeActivity extends BaseActivity implements SummaryListFragment.Ca
         }else{
             mSummaries = savedInstanceState.getParcelableArrayList("summaries");
         }
+
+        mMultiPane = findViewById(R.id.secondary_content) != null;
 
         Collections.sort(mSummaries, mAlphabeticalComparator);
         mSummaryListFragment = SummaryListFragment.newInstance(mSummaries);
@@ -55,15 +59,32 @@ public class HomeActivity extends BaseActivity implements SummaryListFragment.Ca
 
     @Override
     public void onItemSelected(RottenTomatoesSummary item) {
-        if(findViewById(R.id.secondary_content) == null){
+        if(mMultiPane){
+            setDisplayedItem(item);
+        }else{
             Intent intent = new Intent(this, DisplayActivity.class);
             intent.putExtra("summary", item);
             startActivity(intent);
-        }else{
-            mDisplayFragment = DisplayFragment.newInstance(item);
-            getSupportFragmentManager().beginTransaction().replace(R.id.secondary_content, mDisplayFragment).commit();
         }
 
+    }
+
+    @Override
+    public void onItemMovedToTop(RottenTomatoesSummary item) {
+        if(mMultiPane){
+            setDisplayedItem(item);
+        }
+    }
+
+    private void setDisplayedItem(RottenTomatoesSummary item){
+        if(mMultiPane){
+            if(mDisplayFragment == null || !mDisplayFragment.isAdded()){
+                mDisplayFragment = DisplayFragment.newInstance(item);
+                getSupportFragmentManager().beginTransaction().replace(R.id.secondary_content, mDisplayFragment).commit();
+            }else{
+                mDisplayFragment.setSummary(item);
+            }
+        }
     }
 
     @Override
@@ -78,5 +99,10 @@ public class HomeActivity extends BaseActivity implements SummaryListFragment.Ca
     @Override
     public void onActorClicked(RottenTomatoesActorBrief actor) {
 
+    }
+
+    @Override
+    public void presentPalette(Palette palette) {
+        //do nothing
     }
 }

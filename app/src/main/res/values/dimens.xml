@@ -21,4 +21,8 @@
 
     <!-- ELEVATION CONSTANTS -->
     <dimen name="toolbar_elevation">4dp</dimen>
+
+    <dimen name="big_poster_width">268dp</dimen>
+    <dimen name="big_poster_height">402dp</dimen>
+
 </resources>

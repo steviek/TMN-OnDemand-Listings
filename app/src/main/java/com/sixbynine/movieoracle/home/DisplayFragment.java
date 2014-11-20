@@ -1,9 +1,12 @@
 package com.sixbynine.movieoracle.home;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.graphics.Palette;
 import android.support.v7.widget.GridLayout;
 import android.text.SpannableString;
 import android.text.style.UnderlineSpan;
@@ -14,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.sixbynine.movieoracle.R;
+import com.sixbynine.movieoracle.manager.PaletteManager;
 import com.sixbynine.movieoracle.manager.RottenTomatoesManager;
 import com.sixbynine.movieoracle.manager.UpdateEvent;
 import com.sixbynine.movieoracle.manager.UpdateListener;
@@ -43,13 +47,30 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
     //private TextView mCastBody;
     private View mCastDivider;
     private ViewGroup mRatingsContainer;
+    private ViewGroup mRoot;
+
+    private ViewGroup mBigPosterContainer;
+    private ImageView mBigPoster;
 
     private RottenTomatoesSummary mSummary;
     private Callback mCallback;
 
     public interface Callback{
         public void onActorClicked(RottenTomatoesActorBrief actor);
+        public void presentPalette(Palette palette);
     }
+
+    private View.OnClickListener mRottenTomatoesClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if(v == mRatingsContainer){
+                String url = mSummary.getLinks().getAlternate();
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setData(Uri.parse(url));
+                startActivity(i);
+            }
+        }
+    };
 
     @Override
     public void onAttach(Activity activity) {
@@ -82,17 +103,19 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
         super.onResume();
         RottenTomatoesManager.getInstance().subscribe(this);
         RottenTomatoesManager.getInstance().getPoster(mSummary);
+        PaletteManager.getInstance().subscribe(this);
     }
 
     @Override
     public void onPause() {
         super.onPause();
         RottenTomatoesManager.getInstance().unSubscribe(this);
+        PaletteManager.getInstance().unSubscribe(this);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_display, container, false);
+        View view = (ViewGroup) inflater.inflate(R.layout.fragment_display, container, false);
 
         mPoster = (ImageView) view.findViewById(R.id.poster);
         mTitle = (TextView) view.findViewById(R.id.title);
@@ -109,9 +132,12 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
         mCastDivider = view.findViewById(R.id.cast_divider);
         mCastContainer = (GridLayout) view.findViewById(R.id.cast_container);
         mRatingsContainer = (ViewGroup) view.findViewById(R.id.ratings_container);
+        mRatingsContainer.setOnClickListener(mRottenTomatoesClickListener);
 
+        mBigPosterContainer = (ViewGroup) view.findViewById(R.id.big_poster_container);
+        mBigPoster = (ImageView) view.findViewById(R.id.big_poster);
 
-
+        mRoot = container;
         return view;
     }
 
@@ -119,6 +145,10 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         setSummary(mSummary);
+    }
+
+    public RottenTomatoesSummary getSummary(){
+        return mSummary;
     }
 
     public void setSummary(RottenTomatoesSummary summary){
@@ -200,6 +230,11 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
         }else{
             mRatingsContainer.setVisibility(View.GONE);
         }
+
+        if(isResumed()){
+            mPoster.setImageResource(0);
+            RottenTomatoesManager.getInstance().getPoster(mSummary);
+        }
     }
 
     private void hideCast(){
@@ -232,12 +267,47 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
             case POSTER_LOADED:
                 if(((RottenTomatoesSummary) data[0]).getId().equals(mSummary.getId())){
                     mPoster.setImageBitmap((Bitmap) data[1]);
+                    mPoster.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            mBigPosterContainer.setVisibility(View.VISIBLE);
+                            mPoster.setVisibility(View.GONE);
+                        }
+                    });
+                    mBigPoster.setImageBitmap((Bitmap) data[1]);
+                    mBigPoster.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            mBigPosterContainer.setVisibility(View.GONE);
+                            mPoster.setVisibility(View.VISIBLE);
+                        }
+                    });
+                    PaletteManager.getInstance().loadPalette((RottenTomatoesSummary) data[0], (Bitmap) data[1]);
                 }
                 break;
             case POSTER_FAILED_TO_LOAD:
                 if(((RottenTomatoesSummary) data[0]).getId().equals(mSummary.getId())){
                 }
                 break;
+            case PALETTE_LOADED:
+                if(((RottenTomatoesSummary) data[0]).getId().equals(mSummary.getId())){
+                    mCallback.presentPalette((Palette) data[1]);
+                }
+                break;
         }
+    }
+
+
+
+    /**
+     * Hides the big poster from the screen
+     * @return true if this caused a change in layout, false otherwise
+     */
+    public boolean hideBigPoster(){
+        if(mBigPosterContainer.getVisibility() == View.VISIBLE){
+            mBigPosterContainer.setVisibility(View.GONE);
+            return true;
+        }
+        return false;
     }
 }
