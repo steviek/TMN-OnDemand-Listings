@@ -8,7 +8,7 @@ import com.google.gson.annotations.SerializedName;
 /**
  * Created by steviekideckel on 10/30/14.
  */
-public class RottenTomatoesRatings implements Parcelable{
+public class RottenTomatoesRatings implements Parcelable, Comparable<RottenTomatoesRatings>{
     @SerializedName("critics_score")
     private int criticsScore;
     @SerializedName("audience_score")
@@ -55,4 +55,19 @@ public class RottenTomatoesRatings implements Parcelable{
             return new RottenTomatoesRatings[size];
         }
     };
+
+    private int getAverage(){
+        if(criticsScore == 0){
+            return audienceScore;
+        }else if(audienceScore == 0){
+            return criticsScore;
+        }else{
+            return (audienceScore + criticsScore)/2;
+        }
+    }
+
+    @Override
+    public int compareTo(RottenTomatoesRatings another) {
+        return getAverage() - another.getAverage();
+    }
 }

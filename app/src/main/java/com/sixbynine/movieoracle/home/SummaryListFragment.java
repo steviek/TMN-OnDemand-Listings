@@ -11,10 +11,13 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.sixbynine.movieoracle.R;
+import com.sixbynine.movieoracle.model.Filter;
+import com.sixbynine.movieoracle.model.Sort;
 import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
 import com.sixbynine.movieoracle.ui.fragment.ActionBarFragment;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by steviekideckel on 11/2/14.
@@ -103,5 +106,13 @@ public class SummaryListFragment extends ActionBarFragment{
 
 
         return view;
+    }
+
+    public void sortAndFilter(Sort sort, Filter filter){
+        List<RottenTomatoesSummary> sortedAndFiltered =
+                RottenTomatoesSummary.sortAndFilterList(mAllSummaries, sort, filter);
+        mDisplaySummaries.clear();
+        mDisplaySummaries.addAll(sortedAndFiltered);
+        mAdapter.notifyDataSetChanged();
     }
 }

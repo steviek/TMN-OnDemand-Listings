@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="filter_choices">
+        <item>None</item>
+        <item>Rating</item>
+        <item>Actor</item>
+        <item>Title</item>
+    </string-array>
+
+    <string-array name="sort_choices">
+        <item>A-Z</item>
+        <item>Rating</item>
+        <item>Year</item>
+    </string-array>
+
+</resources>

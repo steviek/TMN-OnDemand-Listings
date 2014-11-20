@@ -278,8 +278,8 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
                     mBigPoster.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            mBigPosterContainer.setVisibility(View.GONE);
-                            mPoster.setVisibility(View.VISIBLE);
+                            hideBigPoster();
+
                         }
                     });
                     PaletteManager.getInstance().loadPalette((RottenTomatoesSummary) data[0], (Bitmap) data[1]);
@@ -306,8 +306,11 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
     public boolean hideBigPoster(){
         if(mBigPosterContainer.getVisibility() == View.VISIBLE){
             mBigPosterContainer.setVisibility(View.GONE);
+            mPoster.setVisibility(View.VISIBLE);
             return true;
         }
         return false;
     }
+
+
 }

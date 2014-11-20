@@ -5,8 +5,13 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.google.gson.annotations.SerializedName;
+import com.sixbynine.movieoracle.model.Filter;
+import com.sixbynine.movieoracle.model.Sort;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Created by steviekideckel on 10/30/14.
@@ -197,4 +202,48 @@ public class RottenTomatoesSummary implements Parcelable{
             return new RottenTomatoesSummary[size];
         }
     };
+
+    public static List<RottenTomatoesSummary> sortAndFilterList(List<RottenTomatoesSummary> list, Sort sort, Filter filter){
+        List<RottenTomatoesSummary> result = new ArrayList<RottenTomatoesSummary>();
+        if(filter != Filter.NONE){
+            int len = list.size();
+            for(int i = 0; i < len; i ++){
+                RottenTomatoesSummary summary = list.get(i);
+                switch(filter){
+                    //TODO: do some logic
+                }
+                result.add(summary);
+            }
+        }else{
+            result.addAll(list);
+        }
+
+        switch(sort){
+            case ALPHABETICAL:
+                Collections.sort(result, new Comparator<RottenTomatoesSummary>() {
+                    @Override
+                    public int compare(RottenTomatoesSummary lhs, RottenTomatoesSummary rhs) {
+                        return lhs.getTitle().compareTo(rhs.getTitle());
+                    }
+                });
+                break;
+            case RATING:
+                Collections.sort(result, new Comparator<RottenTomatoesSummary>() {
+                    @Override
+                    public int compare(RottenTomatoesSummary lhs, RottenTomatoesSummary rhs) {
+                        return rhs.getRatings().compareTo(lhs.getRatings());
+                    }
+                });
+                break;
+            case YEAR:
+                Collections.sort(result, new Comparator<RottenTomatoesSummary>() {
+                    @Override
+                    public int compare(RottenTomatoesSummary lhs, RottenTomatoesSummary rhs) {
+                        return rhs.getYearAsInt() - lhs.getYearAsInt();
+                    }
+                });
+                break;
+        }
+        return result;
+    }
 }

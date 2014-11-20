@@ -6,6 +6,8 @@ import android.support.v7.graphics.Palette;
 
 import com.sixbynine.movieoracle.R;
 import com.sixbynine.movieoracle.display.DisplayActivity;
+import com.sixbynine.movieoracle.model.Filter;
+import com.sixbynine.movieoracle.model.Sort;
 import com.sixbynine.movieoracle.object.RottenTomatoesActorBrief;
 import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
 import com.sixbynine.movieoracle.ui.activity.BaseActivity;
@@ -17,11 +19,13 @@ import java.util.Comparator;
 /**
  * Created by steviekideckel on 11/2/14.
  */
-public class HomeActivity extends BaseActivity implements SummaryListFragment.Callback, DisplayFragment.Callback{
+public class HomeActivity extends BaseActivity implements SummaryListFragment.Callback, DisplayFragment.Callback,
+FilterFragment.Callback{
 
     private ArrayList<RottenTomatoesSummary> mSummaries;
     private SummaryListFragment mSummaryListFragment;
     private DisplayFragment mDisplayFragment;
+    private FilterFragment mFilterFragment;
     private boolean mMultiPane;
 
     @Override
@@ -41,6 +45,8 @@ public class HomeActivity extends BaseActivity implements SummaryListFragment.Ca
         mSummaryListFragment = SummaryListFragment.newInstance(mSummaries);
         getSupportFragmentManager().beginTransaction().replace(R.id.content, mSummaryListFragment).commit();
 
+        mFilterFragment = FilterFragment.newInstance();
+        getSupportFragmentManager().beginTransaction().replace(R.id.filter_container, mFilterFragment).commit();
 
     }
 
@@ -104,5 +110,10 @@ public class HomeActivity extends BaseActivity implements SummaryListFragment.Ca
     @Override
     public void presentPalette(Palette palette) {
         //do nothing
+    }
+
+    @Override
+    public void applyFilterAndSort(Filter filter, Sort sort) {
+        mSummaryListFragment.sortAndFilter(sort, filter);
     }
 }

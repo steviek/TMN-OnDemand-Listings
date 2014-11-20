@@ -79,7 +79,6 @@
     
     <string name="ad_unit_id">ca-app-pub-6383222086691934/6147456802</string>
     <string name="drawer_open">Drawer Open</string>
-    <string name="drawer_close">Drawer Open</string>
 
     <string name="loaded">Loaded %1$s</string>
 
@@ -87,5 +86,7 @@
     <string name="n_minutes">%1$d minutes</string>
     <string name="cast">Cast</string>
     <string name="synopsis">Synopsis</string>
+    <string name="filtering_by_string">Filtering by %1$s</string>
+    <string name="sorting_by_string">Sorting by %1$s</string>
 
 </resources>
