@@ -44,7 +44,9 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
         mPager.setPageTransformer(false, new ViewPager.PageTransformer() {
             @Override
             public void transformPage(View view, float v) {
-                view.setAlpha(1- Math.abs(v));
+                if(Build.VERSION.SDK_INT >= 11) {
+                    view.setAlpha(1 - Math.abs(v));
+                }
             }
         });
         mPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {

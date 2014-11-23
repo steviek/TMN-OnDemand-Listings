@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -24,11 +23,10 @@ import com.sixbynine.movieoracle.manager.RottenTomatoesManager;
 import com.sixbynine.movieoracle.manager.UpdateEvent;
 import com.sixbynine.movieoracle.manager.UpdateListener;
 import com.sixbynine.movieoracle.media.Catalogue;
-import com.sixbynine.movieoracle.model.Filter;
-import com.sixbynine.movieoracle.model.Sort;
 import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
 import com.sixbynine.movieoracle.sql.allmedia.AllMediaDAO;
 import com.sixbynine.movieoracle.sql.ondemandlistings.OnDemandListingsDAO;
+import com.sixbynine.movieoracle.ui.activity.BaseActivity;
 import com.sixbynine.movieoracle.util.Prefs;
 
 import java.text.DateFormat;
@@ -36,7 +34,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-public class SplashActivity extends ActionBarActivity implements SplashActivityCallback, UpdateListener{
+public class SplashActivity extends BaseActivity implements SplashActivityCallback, UpdateListener{
 
 	private Catalogue catalogue;
 	private Catalogue allMediaDB;
