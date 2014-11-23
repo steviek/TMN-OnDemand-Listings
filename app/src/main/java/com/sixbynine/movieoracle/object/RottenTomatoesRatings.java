@@ -56,7 +56,7 @@ public class RottenTomatoesRatings implements Parcelable, Comparable<RottenTomat
         }
     };
 
-    private int getAverage(){
+    public int getAverage(){
         if(criticsScore == 0){
             return audienceScore;
         }else if(audienceScore == 0){

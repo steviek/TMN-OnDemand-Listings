@@ -24,6 +24,8 @@ import com.sixbynine.movieoracle.manager.RottenTomatoesManager;
 import com.sixbynine.movieoracle.manager.UpdateEvent;
 import com.sixbynine.movieoracle.manager.UpdateListener;
 import com.sixbynine.movieoracle.media.Catalogue;
+import com.sixbynine.movieoracle.model.Filter;
+import com.sixbynine.movieoracle.model.Sort;
 import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
 import com.sixbynine.movieoracle.sql.allmedia.AllMediaDAO;
 import com.sixbynine.movieoracle.sql.ondemandlistings.OnDemandListingsDAO;
@@ -134,7 +136,6 @@ public class SplashActivity extends ActionBarActivity implements SplashActivityC
 		 
 		
 		 if(hasInternet() && (checkEvenIfNotStale || onDemandListingsAreStale())){
-			 
 			 WebResources.loadResources(new WebResources.Callback() {
 				
 				@Override

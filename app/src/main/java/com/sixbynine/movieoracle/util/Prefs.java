@@ -215,6 +215,36 @@ public class Prefs {
         return null;
     }
 
+    /*public static void setFilter(Filter filter){
+        init();
+        if(prefs != null){
+            prefs.edit().putInt(Keys.FILTER, filter.id).apply();
+        }
+    }
+
+    public static Filter getFilter(){
+        init();
+        if(prefs != null){
+            return Filter.fromId(prefs.getInt(Keys.FILTER, Filter.NONE.id));
+        }
+        return Filter.NONE;
+    }
+
+    public static void setSort(Sort sort){
+        init();
+        if(prefs != null){
+            prefs.edit().putInt(Keys.SORT, sort.id).apply();
+        }
+    }
+
+    public static Sort getSort(){
+        init();
+        if(prefs != null){
+            return Sort.fromId(prefs.getInt(Keys.SORT, Sort.ALPHABETICAL.id));
+        }
+        return Sort.ALPHABETICAL;
+    }*/
+
     public class Keys{
         public static final String IGNORE_LIST = "IGNORE_LIST";
         public static final String EXCLUDE_LIST = "EXCLUDE_LIST";
@@ -225,6 +255,9 @@ public class Prefs {
         private static final String LAST_SAVE_DATE = "LAST_SAVE_DATE";
         public static final String ALL_SUMMARIES = "ALL_SUMMARIES";
         public static final String CURRENT_SUMMARIES = "CURRENT_SUMMARIES";
+
+        public static final String FILTER = "FILTER";
+        public static final String SORT = "SORT";
     }
 
 	

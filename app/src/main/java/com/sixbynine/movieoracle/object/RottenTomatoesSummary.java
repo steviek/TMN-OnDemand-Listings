@@ -10,13 +10,17 @@ import com.sixbynine.movieoracle.model.Sort;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
  * Created by steviekideckel on 10/30/14.
  */
 public class RottenTomatoesSummary implements Parcelable{
+    public static final String SELECT_ACTOR = "Select Actor";
+    public static final String RATING_ALL = "All";
+    public static final String RATING_FRESH = "Fresh";
+
+
     private String id;
     private String title;
     private String year;
@@ -203,47 +207,43 @@ public class RottenTomatoesSummary implements Parcelable{
         }
     };
 
-    public static List<RottenTomatoesSummary> sortAndFilterList(List<RottenTomatoesSummary> list, Sort sort, Filter filter){
-        List<RottenTomatoesSummary> result = new ArrayList<RottenTomatoesSummary>();
-        if(filter != Filter.NONE){
-            int len = list.size();
-            for(int i = 0; i < len; i ++){
-                RottenTomatoesSummary summary = list.get(i);
-                switch(filter){
-                    //TODO: do some logic
-                }
-                result.add(summary);
-            }
-        }else{
-            result.addAll(list);
-        }
-
-        switch(sort){
-            case ALPHABETICAL:
-                Collections.sort(result, new Comparator<RottenTomatoesSummary>() {
-                    @Override
-                    public int compare(RottenTomatoesSummary lhs, RottenTomatoesSummary rhs) {
-                        return lhs.getTitle().compareTo(rhs.getTitle());
+    public static List<String> getAllChoices(List<? extends RottenTomatoesSummary> list, Filter filter){
+        List<String> choices = new ArrayList<String>();
+        int len = list.size();
+        switch(filter){
+            case ACTOR:
+                for(int i =0; i < len; i ++){
+                    RottenTomatoesSummary summary = list.get(i);
+                    if(summary.cast != null) {
+                        int len2 = summary.cast.size();
+                        for (int j = 0; j < len2; j ++){
+                            RottenTomatoesActorBrief actorBrief = summary.cast.get(j);
+                            if(!choices.contains(actorBrief.getName())) {
+                                choices.add(actorBrief.getName());
+                            }
+                        }
                     }
-                });
+                }
+                Collections.sort(choices);
+                choices.add(0,SELECT_ACTOR);
                 break;
             case RATING:
-                Collections.sort(result, new Comparator<RottenTomatoesSummary>() {
-                    @Override
-                    public int compare(RottenTomatoesSummary lhs, RottenTomatoesSummary rhs) {
-                        return rhs.getRatings().compareTo(lhs.getRatings());
-                    }
-                });
-                break;
-            case YEAR:
-                Collections.sort(result, new Comparator<RottenTomatoesSummary>() {
-                    @Override
-                    public int compare(RottenTomatoesSummary lhs, RottenTomatoesSummary rhs) {
-                        return rhs.getYearAsInt() - lhs.getYearAsInt();
-                    }
-                });
+                choices.add(RATING_ALL);
+                choices.add(RATING_FRESH);
                 break;
         }
+        return choices;
+
+    }
+
+    public static List<RottenTomatoesSummary> sortAndFilterList(ArrayList<? extends RottenTomatoesSummary> list, Sort sort, Filter filter, Object filterParameter){
+        List<RottenTomatoesSummary> result;
+        if(filter == null || filterParameter == null){
+            result = new ArrayList<RottenTomatoesSummary>(list);
+        }else{
+            result = Filter.filterList(list, filter.acceptor, filterParameter);
+        }
+        Collections.sort(result, sort.comparator);
         return result;
     }
 }

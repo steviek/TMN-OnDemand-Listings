@@ -7,16 +7,17 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.Spinner;
-import android.widget.TextView;
 
 import com.sixbynine.movieoracle.R;
 import com.sixbynine.movieoracle.model.Filter;
 import com.sixbynine.movieoracle.model.Sort;
+import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
+
+import java.util.List;
 
 /**
  * Created by steviekideckel on 11/20/14.
@@ -26,25 +27,25 @@ public class FilterFragment extends Fragment{
     private LinearLayout mEditLayout;
     private Spinner mFilterSpinner;
     private Spinner mSortSpinner;
-    private Button mGoButton;
+    private Spinner mFilterSpinnerOption;
 
-    private RelativeLayout mDisplayLayout;
-    private TextView mDisplayTextView;
-    private Button mChangeButton;
     private Callback mCallback;
 
     private Filter mFilter;
+    private String mFilterParameter;
     private Sort mSort;
 
     public interface Callback{
-        public void applyFilterAndSort(Filter filter, Sort sort);
+        public void applyFilterAndSort(Filter filter, Sort sort, String parameter);
+        public List<RottenTomatoesSummary> getSummaries();
+        public void hideFilter();
     }
 
     public static FilterFragment newInstance(){
-        return newInstance(Filter.NONE, Sort.ALPHABETICAL);
+        return newInstance(Filter.NONE, Sort.ALPHABETICAL, null);
     }
 
-    public static FilterFragment newInstance(Filter filter, Sort sort){
+    public static FilterFragment newInstance(Filter filter, Sort sort, String parameter){
         FilterFragment frag = new FilterFragment();
         Bundle b = new Bundle();
         if(filter != null){
@@ -52,6 +53,9 @@ public class FilterFragment extends Fragment{
         }
         if(sort != null){
             b.putInt("sort", sort.id);
+        }
+        if(parameter != null){
+            b.putString("param", parameter);
         }
         frag.setArguments(b);
         return frag;
@@ -76,6 +80,7 @@ public class FilterFragment extends Fragment{
             if(filterKey != -1) mFilter = Filter.fromId(filterKey);
             int sortKey = args.getInt("sort", -1);
             if(sortKey != -1) mSort = Sort.fromId(sortKey);
+            mFilterParameter = args.getString("param");
         }
     }
 
@@ -86,58 +91,123 @@ public class FilterFragment extends Fragment{
         mEditLayout = (LinearLayout) view.findViewById(R.id.edit_layout);
         mFilterSpinner = (Spinner) view.findViewById(R.id.filter_spinner);
         ArrayAdapter<CharSequence> filterAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.filter_choices,
-                android.R.layout.simple_spinner_item);
+                R.layout.spinner_text);
         filterAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mFilterSpinner.setAdapter(filterAdapter);
+        mFilterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                applyFilter(true);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        mFilterSpinnerOption = (Spinner) view.findViewById(R.id.filter_spinner_choices);
+        mFilterSpinnerOption.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                applyFilter(false);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
 
         mSortSpinner = (Spinner) view.findViewById(R.id.sort_spinner);
+        mSortSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                applyFilter(false);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
         ArrayAdapter<CharSequence> sortAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.sort_choices,
-                android.R.layout.simple_spinner_item);
+                R.layout.spinner_text);
         sortAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mSortSpinner.setAdapter(sortAdapter);
 
-        mGoButton = (Button) view.findViewById(R.id.button_go);
-        mGoButton.setOnClickListener(new View.OnClickListener() {
+        view.findViewById(R.id.close_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                applyFilter();
+                mFilterParameter = null;
+                mFilter = Filter.NONE;
+                mSort = Sort.ALPHABETICAL;
+                initFilteredViews();
+                mCallback.applyFilterAndSort(mFilter, mSort, mFilterParameter);
             }
         });
 
-        mDisplayLayout = (RelativeLayout) view.findViewById(R.id.display_layout);
-        mDisplayTextView = (TextView) view.findViewById(R.id.summary_text_view);
-        mChangeButton = (Button) view.findViewById(R.id.button_change);
-        mChangeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mEditLayout.setVisibility(View.VISIBLE);
-                mDisplayLayout.setVisibility(View.GONE);
-            }
-        });
+        initFilteredViews();
 
+
+
+        return view;
+    }
+
+    private void initFilteredViews(){
         if(mFilter != null){
             mFilterSpinner.setSelection(mFilter.id);
+
+            if(mFilter == Filter.NONE){
+                mFilterSpinnerOption.setVisibility(View.INVISIBLE);
+            }else if(mFilter == Filter.TITLE){
+                mFilterSpinnerOption.setVisibility(View.INVISIBLE);
+            }else{
+                mFilterSpinnerOption.setVisibility(View.VISIBLE);
+                List<String> choices = RottenTomatoesSummary.getAllChoices(mCallback.getSummaries(), mFilter);
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
+                        R.layout.spinner_text,
+                        choices);
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                mFilterSpinnerOption.setAdapter(adapter);
+
+                if(mFilterParameter != null){
+                    int index = choices.indexOf(mFilterParameter);
+                    if(index != -1){
+                        mFilterSpinnerOption.setSelection(index);
+                    }
+                }
+            }
+
         }
 
         if(mSort != null){
             mSortSpinner.setSelection(mSort.id);
         }
-
-        return view;
     }
 
-    private void applyFilter(){
+    private void applyFilter(boolean initAfter){
+
         mFilter = Filter.fromId(mFilterSpinner.getSelectedItemPosition());
+
         mSort = Sort.fromId(mSortSpinner.getSelectedItemPosition());
-        mEditLayout.setVisibility(View.GONE);
-        mDisplayLayout.setVisibility(View.VISIBLE);
-        if(mFilter == Filter.NONE){
-            mDisplayTextView.setText(getString(R.string.sorting_by_string, mSort.name));
+
+        if(mFilterSpinnerOption.getVisibility() == View.VISIBLE){
+            mFilterParameter = (String) mFilterSpinnerOption.getSelectedItem();
         }else{
-            mDisplayTextView.setText(getString(R.string.filtering_by_string, mFilter.name) + ", " +
-                    getString(R.string.sorting_by_string, mSort.name));
+            mFilterParameter = null;
         }
-        mCallback.applyFilterAndSort(mFilter, mSort);
+        mCallback.applyFilterAndSort(mFilter, mSort, mFilterParameter);
+
+        if(initAfter){
+            initFilteredViews();
+        }
+    }
+
+    public void setFilter(Filter filter, String param){
+        mFilter = filter;
+        mFilterParameter = param;
+        initFilteredViews();
     }
 
     public Filter getFilter(){

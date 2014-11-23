@@ -1,6 +1,7 @@
 package com.sixbynine.movieoracle.home;
 
 import android.content.Context;
+import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
  */
 public class SummaryListAdapter extends ArrayAdapter<RottenTomatoesSummary> {
     private ArrayList<RottenTomatoesSummary> mSummaries;
+    private int mSelected = -1;
 
     public static class ViewHolder{
         public TextView mTitle;
@@ -49,8 +51,24 @@ public class SummaryListAdapter extends ArrayAdapter<RottenTomatoesSummary> {
             convertView.setTag(viewHolder);
         }
 
+
+
         ViewHolder viewHolder = (ViewHolder) convertView.getTag();
         bindView(viewHolder, position);
+
+        if(position == mSelected){
+            if(Build.VERSION.SDK_INT >= 16) {
+                convertView.setBackground(getContext().getResources().getDrawable(R.drawable.selected_background));
+            }else{
+                convertView.setBackgroundDrawable(getContext().getResources().getDrawable(R.drawable.selected_background));
+            }
+        }else{
+            if(Build.VERSION.SDK_INT >= 16) {
+                convertView.setBackground(getContext().getResources().getDrawable(R.drawable.selector_white));
+            }else{
+                convertView.setBackgroundDrawable(getContext().getResources().getDrawable(R.drawable.selector_white));
+            }
+        }
 
         return convertView;
     }
@@ -88,6 +106,8 @@ public class SummaryListAdapter extends ArrayAdapter<RottenTomatoesSummary> {
             viewHolder.mAudienceTextViewFresh.setVisibility(View.GONE);
             viewHolder.mAudienceTextViewRotten.setVisibility(View.INVISIBLE);
         }
+
+
     }
 
     @Override
@@ -97,5 +117,10 @@ public class SummaryListAdapter extends ArrayAdapter<RottenTomatoesSummary> {
         }else{
             return mSummaries.size();
         }
+    }
+
+    public void setSelectedIndex(int index){
+        mSelected = index;
+        notifyDataSetChanged();
     }
 }

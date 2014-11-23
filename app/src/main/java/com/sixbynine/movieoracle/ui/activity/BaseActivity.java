@@ -6,8 +6,6 @@ import android.support.v7.widget.Toolbar;
 import android.util.TypedValue;
 import android.view.View;
 
-import com.sixbynine.movieoracle.R;
-
 /**
  * Created by steviekideckel on 11/2/14.
  */
@@ -18,9 +16,9 @@ public abstract class BaseActivity extends ActionBarActivity{
     @Override
     public void setContentView(int layoutResID) {
         super.setContentView(layoutResID);
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        ViewCompat.setElevation(mToolbar, getResources().getDimensionPixelOffset(R.dimen.toolbar_elevation));
-        setSupportActionBar(mToolbar);
+        //mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        //ViewCompat.setElevation(mToolbar, getResources().getDimensionPixelOffset(R.dimen.toolbar_elevation));
+        //setSupportActionBar(mToolbar);
 
     }
 

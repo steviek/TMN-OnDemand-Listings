@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.sixbynine.movieoracle"
-        minSdkVersion 11
+        minSdkVersion 10
         targetSdkVersion 21
         versionCode 7
         versionName "3.0"

@@ -85,8 +85,12 @@
     <!-- DISPLAY VIDEO -->
     <string name="n_minutes">%1$d minutes</string>
     <string name="cast">Cast</string>
+    <string name="links">Links</string>
     <string name="synopsis">Synopsis</string>
     <string name="filtering_by_string">Filtering by %1$s</string>
     <string name="sorting_by_string">Sorting by %1$s</string>
+
+    <string name="movies_this_week">Now Playing</string>
+    <string name="search">Search</string>
 
 </resources>

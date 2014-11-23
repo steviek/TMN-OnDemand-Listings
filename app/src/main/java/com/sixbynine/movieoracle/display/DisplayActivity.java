@@ -1,5 +1,6 @@
 package com.sixbynine.movieoracle.display;
 
+import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -68,7 +69,10 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
 
     @Override
     public void onActorClicked(RottenTomatoesActorBrief actor) {
-
+        Intent intent = new Intent();
+        intent.putExtra("actor", actor.getName());
+        setResult(RESULT_OK, intent);
+        finish();
     }
 
     @Override

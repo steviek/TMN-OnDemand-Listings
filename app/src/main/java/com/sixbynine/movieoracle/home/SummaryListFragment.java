@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.sixbynine.movieoracle.R;
 import com.sixbynine.movieoracle.model.Filter;
@@ -26,14 +27,15 @@ public class SummaryListFragment extends ActionBarFragment{
 
     private ListView mListView;
     private SummaryListAdapter mAdapter;
+    private TextView mNoResultsTextView;
 
     private ArrayList<RottenTomatoesSummary> mAllSummaries;
     private ArrayList<RottenTomatoesSummary> mDisplaySummaries;
     private Callback mCallback;
 
     public interface Callback{
-        public void onItemSelected(RottenTomatoesSummary item);
-        public void onItemMovedToTop(RottenTomatoesSummary item);
+        public void onItemSelected(int index, RottenTomatoesSummary item);
+        public void onItemMovedToTop(int index, RottenTomatoesSummary item);
     }
 
     public static SummaryListFragment newInstance(ArrayList<RottenTomatoesSummary> summaries){
@@ -72,19 +74,20 @@ public class SummaryListFragment extends ActionBarFragment{
     }
 
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_summary_list, container, false);
 
         mListView = (ListView) view.findViewById(R.id.list_view);
 
+        mNoResultsTextView = (TextView) view.findViewById(R.id.no_results_view);
+
         mAdapter = new SummaryListAdapter(getActivity(), mDisplaySummaries);
         mListView.setAdapter(mAdapter);
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if(mCallback != null) mCallback.onItemSelected(mDisplaySummaries.get(position));
+                if(mCallback != null) mCallback.onItemSelected(position, mDisplaySummaries.get(position));
             }
         });
         mListView.setOnScrollListener(new AbsListView.OnScrollListener() {
@@ -96,9 +99,9 @@ public class SummaryListFragment extends ActionBarFragment{
 
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                if(firstVisibleItem != lastFirstVisibleItem){
+                if(firstVisibleItem != lastFirstVisibleItem && !mDisplaySummaries.isEmpty()){
                     lastFirstVisibleItem = firstVisibleItem;
-                    mCallback.onItemMovedToTop(mDisplaySummaries.get(firstVisibleItem));
+                    mCallback.onItemMovedToTop(firstVisibleItem, mDisplaySummaries.get(firstVisibleItem));
                 }
             }
         });
@@ -108,11 +111,28 @@ public class SummaryListFragment extends ActionBarFragment{
         return view;
     }
 
-    public void sortAndFilter(Sort sort, Filter filter){
+    public void sortAndFilter(Sort sort, Filter filter, String parameter){
+        Object param;
+        if(filter == Filter.ACTOR && parameter != null && parameter.equals(RottenTomatoesSummary.SELECT_ACTOR)){
+            param = null;
+        }else if(filter == Filter.RATING){
+            if(parameter != null && parameter.equals(RottenTomatoesSummary.RATING_FRESH)){
+                param = 60;
+            }else{
+                param = null;
+            }
+        }else{
+            param = parameter;
+        }
         List<RottenTomatoesSummary> sortedAndFiltered =
-                RottenTomatoesSummary.sortAndFilterList(mAllSummaries, sort, filter);
+                RottenTomatoesSummary.sortAndFilterList(mAllSummaries, sort, filter, param);
         mDisplaySummaries.clear();
         mDisplaySummaries.addAll(sortedAndFiltered);
         mAdapter.notifyDataSetChanged();
+        mNoResultsTextView.setVisibility(mAdapter.getCount() == 0? View.VISIBLE : View.GONE);
+    }
+
+    public void onPositionSelected(int position){
+        mAdapter.setSelectedIndex(position);
     }
 }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:id="@+id/action_imdb"
+        android:title="IMDB"
+        app:showAsAction="ifRoom"/>
+
+    <item android:id="@+id/action_rt"
+        android:title="Rotten Tomatoes"
+        app:showAsAction="ifRoom"/>
+
+</menu>

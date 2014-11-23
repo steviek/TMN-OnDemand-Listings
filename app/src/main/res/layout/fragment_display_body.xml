@@ -37,4 +37,42 @@
         app:columnOrderPreserved="false"
         app:columnCount="@integer/display_column_count"/>
 
+    <TextView
+        android:id="@+id/links_header"
+        android:text="@string/links"
+        style="@style/DisplayTheme.Header"/>
+
+    <View
+        android:id="@+id/links_divider"
+        style="@style/DisplayTheme.Divider"
+        android:layout_marginBottom="0dp"/>
+
+    <TextView
+        android:id="@+id/links_imdb"
+        style="@style/DisplayTheme.Text"
+        android:background="?attr/selectableItemBackground"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:text="IMDB"/>
+
+    <View
+        android:id="@+id/links_imdb_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#999999"/>
+
+    <TextView
+        android:id="@+id/links_rotten_tomatoes"
+        style="@style/DisplayTheme.Text"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:background="?attr/selectableItemBackground"
+        android:text="Rotten Tomatoes"/>
+
+    <View
+        android:id="@+id/links_rotten_tomatoes_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#999999"/>
+
 </LinearLayout>

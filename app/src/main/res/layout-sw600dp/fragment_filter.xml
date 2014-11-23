@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?attr/colorPrimary"
@@ -12,6 +12,7 @@
         android:id="@+id/edit_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_toLeftOf="@+id/close_button"
         android:visibility="visible"
         android:minHeight="?attr/actionBarSize"
         android:orientation="horizontal"
@@ -22,7 +23,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:paddingBottom="5dp"
-            android:paddingRight="5dp"
+            android:paddingRight="15dp"
             android:paddingTop="5dp"
             android:text="Filter By:"
             android:textAllCaps="true"
@@ -31,9 +32,18 @@
 
         <Spinner
             android:id="@+id/filter_spinner"
-            android:layout_width="150dp"
+            android:layout_width="80dp"
             android:layout_gravity="center_vertical"
 
+            android:layout_height="wrap_content" />
+
+        <Spinner
+            android:id="@+id/filter_spinner_choices"
+            android:layout_width="120dp"
+            android:layout_gravity="center_vertical"
+            android:visibility="invisible"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:layout_height="wrap_content" />
 
         <TextView
@@ -41,7 +51,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:paddingBottom="5dp"
-            android:paddingRight="5dp"
+            android:paddingRight="15dp"
             android:paddingTop="5dp"
             android:text="Sort By:"
             android:textAllCaps="true"
@@ -50,52 +60,20 @@
 
         <Spinner
             android:id="@+id/sort_spinner"
-            android:layout_width="150dp"
+            android:layout_width="110dp"
             android:layout_gravity="center_vertical"
-
             android:layout_height="wrap_content" />
-
-        <Button
-            android:id="@+id/button_go"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Go"
-            android:layout_alignParentRight="true"
-            android:background="@null"
-            android:textColor="@color/selector_white_text"
-            android:layout_gravity="center_vertical"/>
     </LinearLayout>
 
-    <RelativeLayout
-        android:id="@+id/display_layout"
-        android:layout_width="match_parent"
+    <ImageButton
+        android:id="@+id/close_button"
+        style="?attr/actionButtonStyle"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:minHeight="?attr/actionBarSize"
-        android:visibility="gone"
-        android:orientation="horizontal">
+        android:background="@null"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:padding="5dp"
+        android:src="@drawable/ic_action_navigation_close"/>
 
-        <TextView
-            android:id="@+id/summary_text_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingBottom="5dp"
-            android:paddingRight="5dp"
-            android:paddingTop="5dp"
-            android:text="@string/filtering_by_string"
-            android:textAllCaps="true"
-            android:layout_centerInParent="true"
-            android:textColor="@android:color/white"
-            android:textSize="@dimen/text_size_medium_3"/>
-
-        <Button
-            android:id="@+id/button_change"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Change"
-            android:layout_alignParentRight="true"
-            android:background="@null"
-            android:textColor="@color/selector_white_text"
-            android:layout_centerVertical="true"/>
-
-        </RelativeLayout>
-</FrameLayout>
+</RelativeLayout>

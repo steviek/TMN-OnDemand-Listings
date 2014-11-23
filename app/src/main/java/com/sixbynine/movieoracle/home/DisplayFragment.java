@@ -49,6 +49,13 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
     private ViewGroup mRatingsContainer;
     private ViewGroup mRoot;
 
+    private TextView mLinksHeader;
+    private View mLinksDivider;
+    private TextView mImdbText;
+    private View mImdbDivider;
+    private TextView mRtText;
+    private View mRtDivider;
+
     private ViewGroup mBigPosterContainer;
     private ImageView mBigPoster;
 
@@ -63,8 +70,21 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
     private View.OnClickListener mRottenTomatoesClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            if(v == mRatingsContainer){
+            if(v == mRatingsContainer || v == mRtText){
                 String url = mSummary.getLinks().getAlternate();
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setData(Uri.parse(url));
+                startActivity(i);
+            }
+        }
+    };
+
+    private View.OnClickListener mImdbClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if(v == mImdbText){
+                String imdbId = mSummary.getAltIds().getImdbId();
+                String url = "http://www.imdb.com/title/tt" + imdbId;
                 Intent i = new Intent(Intent.ACTION_VIEW);
                 i.setData(Uri.parse(url));
                 startActivity(i);
@@ -133,6 +153,15 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
         mCastContainer = (GridLayout) view.findViewById(R.id.cast_container);
         mRatingsContainer = (ViewGroup) view.findViewById(R.id.ratings_container);
         mRatingsContainer.setOnClickListener(mRottenTomatoesClickListener);
+
+        mLinksHeader = (TextView) view.findViewById(R.id.links_header);
+        mLinksDivider = view.findViewById(R.id.links_divider);
+        mImdbText = (TextView) view.findViewById(R.id.links_imdb);
+        mImdbDivider = view.findViewById(R.id.links_imdb_divider);
+        mRtText = (TextView) view.findViewById(R.id.links_rotten_tomatoes);
+        mRtDivider = view.findViewById(R.id.links_rotten_tomatoes_divider);
+        mImdbText.setOnClickListener(mImdbClickListener);
+        mRtText.setOnClickListener(mRottenTomatoesClickListener);
 
         mBigPosterContainer = (ViewGroup) view.findViewById(R.id.big_poster_container);
         mBigPoster = (ImageView) view.findViewById(R.id.big_poster);
@@ -231,10 +260,15 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
             mRatingsContainer.setVisibility(View.GONE);
         }
 
+        setLinks(mSummary.getAltIds() != null && mSummary.getAltIds().getImdbId() != null,
+                mSummary.getLinks() != null && mSummary.getLinks().getAlternate() != null);
+
         if(isResumed()){
             mPoster.setImageResource(0);
             RottenTomatoesManager.getInstance().getPoster(mSummary);
         }
+
+
     }
 
     private void hideCast(){
@@ -259,6 +293,32 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
         mSynopsisBody.setVisibility(View.VISIBLE);
         mSynopsisDivider.setVisibility(View.VISIBLE);
         mSynopsisHeader.setVisibility(View.VISIBLE);
+    }
+
+    private void setLinks(boolean imdb, boolean rt){
+        if(imdb || rt){
+            mLinksHeader.setVisibility(View.VISIBLE);
+            mLinksDivider.setVisibility(View.VISIBLE);
+        }else{
+            mLinksHeader.setVisibility(View.GONE);
+            mLinksDivider.setVisibility(View.GONE);
+        }
+
+        if(imdb){
+            mImdbText.setVisibility(View.VISIBLE);
+            mImdbDivider.setVisibility(View.VISIBLE);
+        }else{
+            mImdbText.setVisibility(View.GONE);
+            mImdbDivider.setVisibility(View.GONE);
+        }
+
+        if(rt){
+            mRtText.setVisibility(View.VISIBLE);
+            mRtDivider.setVisibility(View.VISIBLE);
+        }else{
+            mRtText.setVisibility(View.GONE);
+            mRtDivider.setVisibility(View.GONE);
+        }
     }
 
     @Override
