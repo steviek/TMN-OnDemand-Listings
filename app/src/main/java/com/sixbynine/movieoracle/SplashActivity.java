@@ -217,7 +217,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityCallba
 				if(mediaDataLoaded){
 					catalogue.addAll(movieDP.retrieveCatalogue());
 					catalogue.addAll(seriesDP.retrieveCatalogue());
-					AllMediaDAO.getInstance().saveCatalogue(catalogue.trimDuplicates());
+					//AllMediaDAO.getInstance().saveCatalogue(catalogue.trimDuplicates());
                     mProgressTextView.setText("");
                     mProgressTextView.setVisibility(View.GONE);
 					pb.setVisibility(View.GONE);

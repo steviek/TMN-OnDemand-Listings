@@ -2,17 +2,18 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="?attr/actionBarSize"
     android:background="?attr/colorPrimary"
     android:minHeight="?attr/actionBarSize"
+    android:maxHeight="?attr/actionBarSize"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin">
 
     <LinearLayout
-        android:id="@+id/edit_layout"
+        android:id="@+id/filter_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_toLeftOf="@+id/close_button"
+        android:layout_toLeftOf="@+id/clear_button"
         android:visibility="visible"
         android:minHeight="?attr/actionBarSize"
         android:orientation="horizontal"
@@ -66,11 +67,11 @@
     </LinearLayout>
 
     <ImageButton
-        android:id="@+id/close_button"
+        android:id="@+id/clear_button"
         style="?attr/actionButtonStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@null"
+        android:background="?attr/selectableItemBackgroundBorderless"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
         android:padding="5dp"

@@ -2,6 +2,7 @@ package com.sixbynine.movieoracle.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 
 import com.google.gson.Gson;
 import com.sixbynine.movieoracle.MyApplication;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,26 +36,62 @@ public class Prefs {
         return null;
 	}
 
+    public static void putStringSet(String key, Set<String> stringSet){
+        init();
+        if(Build.VERSION.SDK_INT >= 11){
+            prefs.edit().putStringSet(key, stringSet).apply();
+        }else{
+            StringBuilder saveString = new StringBuilder("");
+            if(stringSet.size() > 0) {
+                Iterator<String> iter = stringSet.iterator();
+                saveString.append(iter.next());
+                while (iter.hasNext()) {
+                    saveString.append(";;;").append(iter.next());
+                }
+            }
+            prefs.edit().putString(key, saveString.toString()).apply();
+        }
+    }
+
+    public static Set<String> getStringSet(String key){
+        init();
+        if(Build.VERSION.SDK_INT >= 11){
+            return prefs.getStringSet(key, new HashSet<String>());
+        }else{
+            String rawString = prefs.getString(key, "");
+            if(rawString.isEmpty()){
+                return new HashSet<String>();
+            }else{
+                String[] parts = rawString.split(";;;");
+                Set<String> returnVal = new HashSet<String>(parts.length);
+                for(String s : parts){
+                    returnVal.add(s);
+                }
+                return returnVal;
+            }
+        }
+    }
+
     public static void addTitleToIgnoreList(String title){
         init();
         if(prefs != null){
-            Set<String> movieTitles = prefs.getStringSet(Keys.IGNORE_LIST, new HashSet<String>());
+            Set<String> movieTitles = getStringSet(Keys.IGNORE_LIST);
             movieTitles.add(title);
-            prefs.edit().putStringSet(Keys.IGNORE_LIST, movieTitles).apply();
+            putStringSet(Keys.IGNORE_LIST, movieTitles);
         }
     }
 
     public static void saveIgnoreList(Set<String> list){
         init();
         if(prefs != null){
-            prefs.edit().putStringSet(Keys.IGNORE_LIST, list).apply();
+            putStringSet(Keys.IGNORE_LIST, list);
         }
     }
 
     public static Set<String> getIgnoreList(){
         init();
         if(prefs != null){
-            return prefs.getStringSet(Keys.IGNORE_LIST, new HashSet<String>());
+            return getStringSet(Keys.IGNORE_LIST);
         }
         return new HashSet<String>();
     }
@@ -70,28 +108,28 @@ public class Prefs {
     public static void saveExcludeList(Set<String> list){
         init();
         if(prefs != null){
-            prefs.edit().putStringSet(Keys.EXCLUDE_LIST, list).apply();
+            putStringSet(Keys.EXCLUDE_LIST, list);
         }
     }
 
     public static void saveSeriesList(Set<String> list){
         init();
         if(prefs != null){
-            prefs.edit().putStringSet(Keys.SERIES_LIST, list).apply();
+            putStringSet(Keys.SERIES_LIST, list);
         }
     }
 
     public static void savePopulatedList(Set<String> list){
         init();
         if(prefs != null){
-            prefs.edit().putStringSet(Keys.POPULATED_LIST, list).apply();
+            putStringSet(Keys.POPULATED_LIST, list);
         }
     }
 
     public static Set<String> getExcludeList(){
         init();
         if(prefs != null){
-            return prefs.getStringSet(Keys.EXCLUDE_LIST, new HashSet<String>());
+            return getStringSet(Keys.EXCLUDE_LIST);
         }
         return new HashSet<String>();
     }
@@ -99,7 +137,7 @@ public class Prefs {
     public static Set<String> getSeriesList(){
         init();
         if(prefs != null){
-            return prefs.getStringSet(Keys.SERIES_LIST, new HashSet<String>());
+            return getStringSet(Keys.SERIES_LIST);
         }
         return new HashSet<String>();
     }
@@ -107,7 +145,7 @@ public class Prefs {
     public static Set<String> getPopulatedList(){
         init();
         if(prefs != null){
-            return prefs.getStringSet(Keys.POPULATED_LIST, new HashSet<String>());
+            return getStringSet(Keys.POPULATED_LIST);
         }
         return null;
     }
@@ -151,14 +189,14 @@ public class Prefs {
             for(int i = 0; i < size; i ++){
                 stringSet.add(gson.toJson(allSummaries.get(i)));
             }
-            prefs.edit().putStringSet(Keys.ALL_SUMMARIES, stringSet).apply();
+            putStringSet(Keys.ALL_SUMMARIES, stringSet);
         }
     }
 
     public static ArrayList<RottenTomatoesSummary> getAllSummaries(){
         init();
         if(prefs != null){
-            Set<String> stringSet = prefs.getStringSet(Keys.ALL_SUMMARIES, new HashSet<String>());
+            Set<String> stringSet = getStringSet(Keys.ALL_SUMMARIES);
             ArrayList<RottenTomatoesSummary> summaries = new ArrayList<RottenTomatoesSummary>(stringSet.size());
             Gson gson = new Gson();
             for(String s : stringSet){
@@ -179,14 +217,14 @@ public class Prefs {
             for(int i = 0; i < size; i ++){
                 stringSet.add(gson.toJson(currentSummaries.get(i)));
             }
-            prefs.edit().putStringSet(Keys.CURRENT_SUMMARIES, stringSet).apply();
+            putStringSet(Keys.CURRENT_SUMMARIES, stringSet);
         }
     }
 
     public static ArrayList<RottenTomatoesSummary> getCurrentSummaries(){
         init();
         if(prefs != null){
-            Set<String> stringSet = prefs.getStringSet(Keys.CURRENT_SUMMARIES, new HashSet<String>());
+            Set<String> stringSet = getStringSet(Keys.CURRENT_SUMMARIES);
             ArrayList<RottenTomatoesSummary> summaries = new ArrayList<RottenTomatoesSummary>(stringSet.size());
             Gson gson = new Gson();
             for(String s : stringSet){
@@ -201,7 +239,7 @@ public class Prefs {
     public static Map<String, RottenTomatoesSummary> getAllSummariesMap(){
         init();
         if(prefs != null){
-            Set<String> stringSet = prefs.getStringSet(Keys.ALL_SUMMARIES, new HashSet<String>());
+            Set<String> stringSet = getStringSet(Keys.ALL_SUMMARIES);
             Map<String, RottenTomatoesSummary> summaries = new HashMap<String, RottenTomatoesSummary>(stringSet.size());
             Gson gson = new Gson();
             for(String s : stringSet){

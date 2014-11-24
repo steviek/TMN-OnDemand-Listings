@@ -47,7 +47,7 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
     //private TextView mCastBody;
     private View mCastDivider;
     private ViewGroup mRatingsContainer;
-    private ViewGroup mRoot;
+    private View mRoot;
 
     private TextView mLinksHeader;
     private View mLinksDivider;
@@ -65,6 +65,7 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
     public interface Callback{
         public void onActorClicked(RottenTomatoesActorBrief actor);
         public void presentPalette(Palette palette);
+        public boolean shouldShowBigPoster();
     }
 
     private View.OnClickListener mRottenTomatoesClickListener = new View.OnClickListener() {
@@ -135,39 +136,38 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = (ViewGroup) inflater.inflate(R.layout.fragment_display, container, false);
+        mRoot = inflater.inflate(R.layout.fragment_display, container, false);
 
-        mPoster = (ImageView) view.findViewById(R.id.poster);
-        mTitle = (TextView) view.findViewById(R.id.title);
-        mRuntime = (TextView) view.findViewById(R.id.runtime);
-        mYear = (TextView) view.findViewById(R.id.year);
-        mCriticFresh = (TextView) view.findViewById(R.id.critic_fresh_text_view);
-        mCriticRotten = (TextView) view.findViewById(R.id.critic_rotten_text_view);
-        mAudienceFresh = (TextView) view.findViewById(R.id.audience_fresh_text_view);
-        mAudienceRotten = (TextView) view.findViewById(R.id.audience_rotten_text_view);
-        mSynopsisHeader = (TextView) view.findViewById(R.id.synopsis_header);
-        mSynopsisDivider = view.findViewById(R.id.synopsis_divider);
-        mSynopsisBody = (TextView) view.findViewById(R.id.synopsis_text);
-        mCastHeader = (TextView) view.findViewById(R.id.cast_header);
-        mCastDivider = view.findViewById(R.id.cast_divider);
-        mCastContainer = (GridLayout) view.findViewById(R.id.cast_container);
-        mRatingsContainer = (ViewGroup) view.findViewById(R.id.ratings_container);
+        mPoster = (ImageView) mRoot.findViewById(R.id.poster);
+        mTitle = (TextView) mRoot.findViewById(R.id.title);
+        mRuntime = (TextView) mRoot.findViewById(R.id.runtime);
+        mYear = (TextView) mRoot.findViewById(R.id.year);
+        mCriticFresh = (TextView) mRoot.findViewById(R.id.critic_fresh_text_view);
+        mCriticRotten = (TextView) mRoot.findViewById(R.id.critic_rotten_text_view);
+        mAudienceFresh = (TextView) mRoot.findViewById(R.id.audience_fresh_text_view);
+        mAudienceRotten = (TextView) mRoot.findViewById(R.id.audience_rotten_text_view);
+        mSynopsisHeader = (TextView) mRoot.findViewById(R.id.synopsis_header);
+        mSynopsisDivider = mRoot.findViewById(R.id.synopsis_divider);
+        mSynopsisBody = (TextView) mRoot.findViewById(R.id.synopsis_text);
+        mCastHeader = (TextView) mRoot.findViewById(R.id.cast_header);
+        mCastDivider = mRoot.findViewById(R.id.cast_divider);
+        mCastContainer = (GridLayout) mRoot.findViewById(R.id.cast_container);
+        mRatingsContainer = (ViewGroup) mRoot.findViewById(R.id.ratings_container);
         mRatingsContainer.setOnClickListener(mRottenTomatoesClickListener);
 
-        mLinksHeader = (TextView) view.findViewById(R.id.links_header);
-        mLinksDivider = view.findViewById(R.id.links_divider);
-        mImdbText = (TextView) view.findViewById(R.id.links_imdb);
-        mImdbDivider = view.findViewById(R.id.links_imdb_divider);
-        mRtText = (TextView) view.findViewById(R.id.links_rotten_tomatoes);
-        mRtDivider = view.findViewById(R.id.links_rotten_tomatoes_divider);
+        mLinksHeader = (TextView) mRoot.findViewById(R.id.links_header);
+        mLinksDivider = mRoot.findViewById(R.id.links_divider);
+        mImdbText = (TextView) mRoot.findViewById(R.id.links_imdb);
+        mImdbDivider = mRoot.findViewById(R.id.links_imdb_divider);
+        mRtText = (TextView) mRoot.findViewById(R.id.links_rotten_tomatoes);
+        mRtDivider = mRoot.findViewById(R.id.links_rotten_tomatoes_divider);
         mImdbText.setOnClickListener(mImdbClickListener);
         mRtText.setOnClickListener(mRottenTomatoesClickListener);
 
-        mBigPosterContainer = (ViewGroup) view.findViewById(R.id.big_poster_container);
-        mBigPoster = (ImageView) view.findViewById(R.id.big_poster);
+        mBigPosterContainer = (ViewGroup) mRoot.findViewById(R.id.big_poster_container);
+        mBigPoster = (ImageView) mRoot.findViewById(R.id.big_poster);
 
-        mRoot = container;
-        return view;
+        return mRoot;
     }
 
     @Override
@@ -228,6 +228,7 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
 
         RottenTomatoesRatings ratings = mSummary.getRatings();
         if(ratings != null){
+            mRatingsContainer.setVisibility(View.VISIBLE);
             if(ratings.getCriticsScore() > 0){
                 if(ratings.getCriticsScore() >= 60){
                     mCriticFresh.setText(ratings.getCriticsScore() + "%");
@@ -327,21 +328,23 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
             case POSTER_LOADED:
                 if(((RottenTomatoesSummary) data[0]).getId().equals(mSummary.getId())){
                     mPoster.setImageBitmap((Bitmap) data[1]);
-                    mPoster.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            mBigPosterContainer.setVisibility(View.VISIBLE);
-                            mPoster.setVisibility(View.GONE);
-                        }
-                    });
-                    mBigPoster.setImageBitmap((Bitmap) data[1]);
-                    mBigPoster.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            hideBigPoster();
+                    if(mCallback.shouldShowBigPoster()) {
+                        mPoster.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                mBigPosterContainer.setVisibility(View.VISIBLE);
+                                mPoster.setVisibility(View.GONE);
+                            }
+                        });
+                        mBigPoster.setImageBitmap((Bitmap) data[1]);
+                        mBigPoster.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                hideBigPoster();
 
-                        }
-                    });
+                            }
+                        });
+                    }
                     PaletteManager.getInstance().loadPalette((RottenTomatoesSummary) data[0], (Bitmap) data[1]);
                 }
                 break;

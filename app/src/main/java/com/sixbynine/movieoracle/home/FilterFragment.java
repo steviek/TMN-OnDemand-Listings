@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
 
 import com.sixbynine.movieoracle.R;
@@ -24,9 +23,9 @@ import java.util.List;
  */
 public class FilterFragment extends Fragment{
 
-    private LinearLayout mEditLayout;
     private Spinner mFilterSpinner;
     private Spinner mSortSpinner;
+
     private Spinner mFilterSpinnerOption;
 
     private Callback mCallback;
@@ -88,7 +87,6 @@ public class FilterFragment extends Fragment{
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_filter, container, false);
 
-        mEditLayout = (LinearLayout) view.findViewById(R.id.edit_layout);
         mFilterSpinner = (Spinner) view.findViewById(R.id.filter_spinner);
         ArrayAdapter<CharSequence> filterAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.filter_choices,
                 R.layout.spinner_text);
@@ -136,7 +134,7 @@ public class FilterFragment extends Fragment{
         sortAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mSortSpinner.setAdapter(sortAdapter);
 
-        view.findViewById(R.id.close_button).setOnClickListener(new View.OnClickListener() {
+        view.findViewById(R.id.clear_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mFilterParameter = null;
@@ -146,6 +144,21 @@ public class FilterFragment extends Fragment{
                 mCallback.applyFilterAndSort(mFilter, mSort, mFilterParameter);
             }
         });
+
+        final View closeButton = view.findViewById(R.id.close_button);
+        if(closeButton != null){
+            closeButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mFilterParameter = null;
+                    mFilter = Filter.NONE;
+                    mSort = Sort.ALPHABETICAL;
+                    initFilteredViews();
+                    mCallback.applyFilterAndSort(mFilter, mSort, mFilterParameter);
+                    mCallback.hideFilter();
+                }
+            });
+        }
 
         initFilteredViews();
 

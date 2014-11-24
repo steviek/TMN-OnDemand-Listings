@@ -79,7 +79,7 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
 
     @Override
     public void onBackPressed() {
-        if(!mDisplayFragment.hideBigPoster()){
+        if(mDisplayFragment == null || !mDisplayFragment.hideBigPoster()){
             super.onBackPressed(); //do on back pressed if the big poster wasn't showing
         }
     }
@@ -129,5 +129,10 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
         public int getCount() {
                 return 3;
         }
+    }
+
+    @Override
+    public boolean shouldShowBigPoster() {
+        return true;
     }
 }

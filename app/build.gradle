@@ -9,7 +9,7 @@ android {
         minSdkVersion 10
         targetSdkVersion 21
         versionCode 7
-        versionName "3.0"
+        versionName "1111"
     }
     buildTypes {
         release {
@@ -30,4 +30,5 @@ dependencies {
     compile 'com.google.code.gson:gson:2.2.+'
     compile 'com.android.support:gridlayout-v7:21.0.+'
     compile 'com.crittercism:crittercism-android-agent:+'
+    compile 'com.nineoldandroids:library:2.4.0+'
 }
