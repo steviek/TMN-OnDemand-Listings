@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import retrofit.RestAdapter;
 
 /**
  * Created by steviekideckel on 10/30/14.
@@ -52,11 +51,6 @@ public class RottenTomatoesRestClient {
 
         @Override
         protected ArrayList<RottenTomatoesSummary> doInBackground(Void... args) {
-            RestAdapter restAdapter = new RestAdapter.Builder()
-                    .setEndpoint("http://api.rottentomatoes.com/api/public/v1.0")
-                    .build();
-
-            RottenTomatoesService service = restAdapter.create(RottenTomatoesService.class);
 
             final Set<String> ignoreList = Prefs.getMutableIgnoreList();
 
