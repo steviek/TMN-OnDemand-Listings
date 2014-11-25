@@ -19,6 +19,7 @@ import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.AnimatorListenerAdapter;
 import com.nineoldandroids.animation.ValueAnimator;
 import com.sixbynine.movieoracle.AboutFragment;
+import com.sixbynine.movieoracle.MyApplication;
 import com.sixbynine.movieoracle.R;
 import com.sixbynine.movieoracle.display.DisplayActivity;
 import com.sixbynine.movieoracle.model.Filter;
@@ -54,6 +55,7 @@ FilterFragment.Callback{
     private Filter mFilter;
     private Sort mSort;
     private String mFilterParameter;
+    private boolean mFilterShowing;
 
     private SearchView.OnQueryTextListener mOnQueryTextListener = new SearchView.OnQueryTextListener() {
         @Override
@@ -75,16 +77,20 @@ FilterFragment.Callback{
         setContentView(R.layout.activity_home);
         getSupportActionBar().setTitle(R.string.movies_this_week);
 
+        int index = -1;
         if(savedInstanceState == null){
             mSummaries = getIntent().getParcelableArrayListExtra("summaries");
+            mFilterShowing = false;
         }else{
             mSummaries = savedInstanceState.getParcelableArrayList("summaries");
+            mFilterShowing = savedInstanceState.getBoolean("filter_showing");
+            index = savedInstanceState.getInt("list_index", -1);
         }
 
         mMultiPane = findViewById(R.id.secondary_content) != null;
 
         Collections.sort(mSummaries, mAlphabeticalComparator);
-        mSummaryListFragment = SummaryListFragment.newInstance(mSummaries);
+        mSummaryListFragment = SummaryListFragment.newInstance(mSummaries, index);
         getSupportFragmentManager().beginTransaction().replace(R.id.content, mSummaryListFragment).commit();
 
         mFilterFragment = FilterFragment.newInstance();
@@ -100,7 +106,7 @@ FilterFragment.Callback{
                 }else{
                     mFilterContainer.getViewTreeObserver().removeGlobalOnLayoutListener(this);
                 }
-                mFilterContainer.setVisibility(View.GONE);
+                mFilterContainer.setVisibility(mFilterShowing ? View.VISIBLE : View.GONE);
             }
         });
         setElevation(mFilterContainer, 2);
@@ -111,6 +117,10 @@ FilterFragment.Callback{
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList("summaries", mSummaries);
+        outState.putBoolean("filter_showing", mFilterShowing);
+        if(mSummaryListFragment != null){
+            outState.putInt("list_index", mSummaryListFragment.getIndex());
+        }
     }
 
     private Comparator<RottenTomatoesSummary> mAlphabeticalComparator = new Comparator<RottenTomatoesSummary>() {
@@ -179,6 +189,10 @@ FilterFragment.Callback{
                     showFilter();
                 }
                 return true;
+            case R.id.action_rate:
+                Intent i = MyApplication.getStoreIntent();
+                startActivity(i);
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -222,6 +236,7 @@ FilterFragment.Callback{
     @Override
     public void hideFilter() {
         final ViewGroup.LayoutParams lp = mFilterContainer.getLayoutParams();
+        mFilterShowing = false;
         final int originalHeight = mFilterContainer.getHeight();
         if(mFilterContainer.getVisibility() == View.GONE) return;
         mFilterContainer.setTag(originalHeight);
@@ -248,6 +263,7 @@ FilterFragment.Callback{
 
     public void showFilter() {
         if(mFilterContainer.getVisibility() == View.VISIBLE) return;
+        mFilterShowing = true;
         final ViewGroup.LayoutParams lp = mFilterContainer.getLayoutParams();
         mFilterContainer.setVisibility(View.VISIBLE);
         lp.height = 0;

@@ -145,21 +145,6 @@ public class FilterFragment extends Fragment{
             }
         });
 
-        final View closeButton = view.findViewById(R.id.close_button);
-        if(closeButton != null){
-            closeButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mFilterParameter = null;
-                    mFilter = Filter.NONE;
-                    mSort = Sort.ALPHABETICAL;
-                    initFilteredViews();
-                    mCallback.applyFilterAndSort(mFilter, mSort, mFilterParameter);
-                    mCallback.hideFilter();
-                }
-            });
-        }
-
         initFilteredViews();
 
 

@@ -56,19 +56,16 @@
 
         </LinearLayout>
 
-        <Button
+        <ImageButton
             android:id="@+id/clear_button"
+            style="?attr/actionButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:layout_alignTop="@id/filter_layout"
-            android:layout_alignBottom="@id/filter_layout"
-            android:gravity="center"
-            android:padding="16dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:text="Clear"
-            android:textColor="@color/selector_white_text" />
+            android:padding="5dp"
+            android:src="@drawable/ic_action_navigation_close"/>
 
     </RelativeLayout>
 
@@ -81,7 +78,6 @@
             android:id="@+id/sort_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_toLeftOf="@+id/close_button"
             android:minHeight="?attr/actionBarSize"
             android:orientation="horizontal"
             android:visibility="visible">
@@ -104,20 +100,6 @@
                 android:visibility="visible" />
 
         </LinearLayout>
-
-        <Button
-            android:id="@+id/close_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_alignTop="@id/sort_layout"
-            android:layout_alignBottom="@id/sort_layout"
-            android:layout_centerVertical="true"
-            android:gravity="center"
-            android:padding="16dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:text="Close"
-            android:textColor="@color/selector_white_text" />
 
 
     </RelativeLayout>

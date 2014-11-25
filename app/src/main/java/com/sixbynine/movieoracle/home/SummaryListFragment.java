@@ -33,15 +33,18 @@ public class SummaryListFragment extends ActionBarFragment{
     private ArrayList<RottenTomatoesSummary> mDisplaySummaries;
     private Callback mCallback;
 
+    private int mIndex;
+
     public interface Callback{
         public void onItemSelected(int index, RottenTomatoesSummary item);
         public void onItemMovedToTop(int index, RottenTomatoesSummary item);
     }
 
-    public static SummaryListFragment newInstance(ArrayList<RottenTomatoesSummary> summaries){
+    public static SummaryListFragment newInstance(ArrayList<RottenTomatoesSummary> summaries, int index){
         SummaryListFragment frag = new SummaryListFragment();
         Bundle b = new Bundle();
         b.putParcelableArrayList("summaries", summaries);
+        b.putInt("index", index);
         frag.setArguments(b);
         return frag;
     }
@@ -62,8 +65,13 @@ public class SummaryListFragment extends ActionBarFragment{
         if(savedInstanceState == null){
             mAllSummaries = getArguments().getParcelableArrayList("summaries");
             mDisplaySummaries = new ArrayList<RottenTomatoesSummary>(mAllSummaries);
+            mIndex = getArguments().getInt("index");
+            if(mIndex == -1){
+                mIndex = 0;
+            }
         }else{
             mAllSummaries = savedInstanceState.getParcelableArrayList("summaries");
+            mIndex = savedInstanceState.getInt("index", 0);
         }
     }
 
@@ -71,6 +79,7 @@ public class SummaryListFragment extends ActionBarFragment{
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList("summaries", mAllSummaries);
+        outState.putInt("index", mIndex);
     }
 
 
@@ -103,8 +112,10 @@ public class SummaryListFragment extends ActionBarFragment{
                     lastFirstVisibleItem = firstVisibleItem;
                     mCallback.onItemMovedToTop(firstVisibleItem, mDisplaySummaries.get(firstVisibleItem));
                 }
+                mIndex = firstVisibleItem;
             }
         });
+        mListView.setSelection(mIndex);
 
 
 
@@ -130,6 +141,10 @@ public class SummaryListFragment extends ActionBarFragment{
         mDisplaySummaries.addAll(sortedAndFiltered);
         mAdapter.notifyDataSetChanged();
         mNoResultsTextView.setVisibility(mAdapter.getCount() == 0? View.VISIBLE : View.GONE);
+    }
+
+    public int getIndex(){
+        return mIndex;
     }
 
     public void onPositionSelected(int position){
