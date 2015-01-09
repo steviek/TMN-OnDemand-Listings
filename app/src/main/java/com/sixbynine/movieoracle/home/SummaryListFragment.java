@@ -16,6 +16,7 @@ import com.sixbynine.movieoracle.model.Filter;
 import com.sixbynine.movieoracle.model.Sort;
 import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
 import com.sixbynine.movieoracle.ui.fragment.ActionBarFragment;
+import com.sixbynine.movieoracle.util.Prefs;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,10 +41,9 @@ public class SummaryListFragment extends ActionBarFragment{
         public void onItemMovedToTop(int index, RottenTomatoesSummary item);
     }
 
-    public static SummaryListFragment newInstance(ArrayList<RottenTomatoesSummary> summaries, int index){
+    public static SummaryListFragment newInstance(int index){
         SummaryListFragment frag = new SummaryListFragment();
         Bundle b = new Bundle();
-        b.putParcelableArrayList("summaries", summaries);
         b.putInt("index", index);
         frag.setArguments(b);
         return frag;
@@ -62,15 +62,14 @@ public class SummaryListFragment extends ActionBarFragment{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mAllSummaries = Prefs.getCurrentSummaries();
         if(savedInstanceState == null){
-            mAllSummaries = getArguments().getParcelableArrayList("summaries");
-            mDisplaySummaries = new ArrayList<RottenTomatoesSummary>(mAllSummaries);
+            mDisplaySummaries = new ArrayList<>(mAllSummaries);
             mIndex = getArguments().getInt("index");
             if(mIndex == -1){
                 mIndex = 0;
             }
         }else{
-            mAllSummaries = savedInstanceState.getParcelableArrayList("summaries");
             mIndex = savedInstanceState.getInt("index", 0);
         }
     }
@@ -78,7 +77,6 @@ public class SummaryListFragment extends ActionBarFragment{
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList("summaries", mAllSummaries);
         outState.putInt("index", mIndex);
     }
 

@@ -2,6 +2,7 @@ package com.sixbynine.movieoracle.display;
 
 import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -11,6 +12,8 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.graphics.Palette;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -86,17 +89,58 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
 
     @Override
     public void presentPalette(Palette palette) {
-
         Palette.Swatch swatch = palette.getDarkVibrantSwatch();
         if(swatch != null) {
             getSupportActionBar().setBackgroundDrawable(new ColorDrawable(swatch.getRgb()));
-            /*Spannable text = new SpannableString(mDisplayFragment.getSummary().getTitle());
-            text.setSpan(new ForegroundColorSpan(swatch.getTitleTextColor()), 0, text.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-            getSupportActionBar().setTitle(text);*/
             if(Build.VERSION.SDK_INT >= 21){
                 getWindow().setStatusBarColor(getResources().getColor(android.R.color.black));
             }
         }
+    }
+
+    @Override
+    public boolean showLinks() {
+        return false;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.activity_display, menu);
+        String imdbId = null;
+        if(mSummary.getAltIds() != null){
+            imdbId = mSummary.getAltIds().getImdbId();
+        }
+        menu.findItem(R.id.action_imdb).setVisible(imdbId != null && !imdbId.isEmpty());
+        String rtId = null;
+        if(mSummary.getLinks() != null){
+            rtId = mSummary.getLinks().getAlternate();
+        }
+        menu.findItem(R.id.action_rt).setVisible(rtId != null && !rtId.isEmpty());
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()){
+            case R.id.action_imdb:
+                String imdbId = mSummary.getAltIds().getImdbId();
+                String url = "http://www.imdb.com/title/tt" + imdbId;
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setData(Uri.parse(url));
+                startActivity(i);
+                return true;
+            case R.id.action_rt:
+                String url2 = mSummary.getLinks().getAlternate();
+                Intent i2 = new Intent(Intent.ACTION_VIEW);
+                i2.setData(Uri.parse(url2));
+                startActivity(i2);
+                return true;
+            case android.R.id.home:
+                finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     public static class PlaceHolderFragment extends Fragment{

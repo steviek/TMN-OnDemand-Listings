@@ -56,7 +56,7 @@ public class SummaryListAdapter extends ArrayAdapter<RottenTomatoesSummary> {
         ViewHolder viewHolder = (ViewHolder) convertView.getTag();
         bindView(viewHolder, position);
 
-        if(position == mSelected){
+        /*if(position == mSelected){
             if(Build.VERSION.SDK_INT >= 16) {
                 convertView.setBackground(getContext().getResources().getDrawable(R.drawable.selected_background));
             }else{
@@ -68,7 +68,7 @@ public class SummaryListAdapter extends ArrayAdapter<RottenTomatoesSummary> {
             }else{
                 convertView.setBackgroundDrawable(getContext().getResources().getDrawable(R.drawable.selector_white));
             }
-        }
+        }*/
 
         return convertView;
     }

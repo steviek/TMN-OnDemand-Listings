@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.sixbynine.movieoracle.model.Filter;
 import com.sixbynine.movieoracle.model.Sort;
@@ -137,7 +138,9 @@ public class RottenTomatoesSummary implements Parcelable{
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        String[] s = new String[5];
+        Gson gson = new Gson();
+        dest.writeString(gson.toJson(this));
+        /*String[] s = new String[5];
         s[0] = title;
         s[1] = id;
         s[2] = year;
@@ -168,13 +171,13 @@ public class RottenTomatoesSummary implements Parcelable{
         Bundle altBundle = new Bundle();
         altBundle.setClassLoader(RottenTomatoesAltId.class.getClassLoader());
         altBundle.putParcelable("alt", altIds);
-        dest.writeBundle(altBundle);
+        dest.writeBundle(altBundle);*/
     }
 
     public static final Creator<RottenTomatoesSummary> CREATOR = new Creator<RottenTomatoesSummary>() {
         @Override
         public RottenTomatoesSummary createFromParcel(Parcel source) {
-            RottenTomatoesSummary summary = new RottenTomatoesSummary();
+            /*RottenTomatoesSummary summary = new RottenTomatoesSummary();
             String[] s = new String[5];
             source.readStringArray(s);
             summary.title = s[0];
@@ -198,7 +201,9 @@ public class RottenTomatoesSummary implements Parcelable{
             Bundle altBundle = source.readBundle(RottenTomatoesAltId.class.getClassLoader());
             summary.altIds = altBundle.getParcelable("alt");
 
-            return summary;
+            return summary;*/
+            String json = source.readString();
+            return new Gson().fromJson(json, RottenTomatoesSummary.class);
         }
 
         @Override

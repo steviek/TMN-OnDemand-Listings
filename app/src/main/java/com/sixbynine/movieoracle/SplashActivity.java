@@ -152,7 +152,7 @@ public class SplashActivity extends BaseActivity implements SplashActivityCallba
 			 
 		 }else{
              Intent intent = new Intent(this, HomeActivity.class);
-             intent.putParcelableArrayListExtra("summaries", Prefs.getCurrentSummaries());
+             //intent.putParcelableArrayListExtra("summaries", Prefs.getCurrentSummaries());
              startActivity(intent);
              finish();
 		 }

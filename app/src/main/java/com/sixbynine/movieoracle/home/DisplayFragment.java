@@ -66,6 +66,7 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
         public void onActorClicked(RottenTomatoesActorBrief actor);
         public void presentPalette(Palette palette);
         public boolean shouldShowBigPoster();
+        public boolean showLinks();
     }
 
     private View.OnClickListener mRottenTomatoesClickListener = new View.OnClickListener() {
@@ -183,6 +184,7 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
     public void setSummary(RottenTomatoesSummary summary){
         mSummary = summary;
         mTitle.setText(mSummary.getTitle());
+        mTitle.setSelected(true);
 
         if(mSummary.getRuntimeAsInt() > 0){
             mRuntime.setText(getString(R.string.n_minutes, mSummary.getRuntimeAsInt()));
@@ -297,7 +299,8 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
     }
 
     private void setLinks(boolean imdb, boolean rt){
-        if(imdb || rt){
+        boolean showLinks = mCallback.showLinks();
+        if(showLinks && (imdb || rt)){
             mLinksHeader.setVisibility(View.VISIBLE);
             mLinksDivider.setVisibility(View.VISIBLE);
         }else{
@@ -305,7 +308,7 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
             mLinksDivider.setVisibility(View.GONE);
         }
 
-        if(imdb){
+        if(showLinks && imdb){
             mImdbText.setVisibility(View.VISIBLE);
             mImdbDivider.setVisibility(View.VISIBLE);
         }else{
@@ -313,7 +316,7 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
             mImdbDivider.setVisibility(View.GONE);
         }
 
-        if(rt){
+        if(showLinks && rt){
             mRtText.setVisibility(View.VISIBLE);
             mRtDivider.setVisibility(View.VISIBLE);
         }else{

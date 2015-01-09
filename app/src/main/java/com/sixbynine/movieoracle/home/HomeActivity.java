@@ -27,6 +27,7 @@ import com.sixbynine.movieoracle.model.Sort;
 import com.sixbynine.movieoracle.object.RottenTomatoesActorBrief;
 import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
 import com.sixbynine.movieoracle.ui.activity.BaseActivity;
+import com.sixbynine.movieoracle.util.Prefs;
 import com.sixbynine.movieoracle.util.ViewHelper;
 
 import java.util.ArrayList;
@@ -78,11 +79,10 @@ FilterFragment.Callback{
         getSupportActionBar().setTitle(R.string.movies_this_week);
 
         int index = -1;
+        mSummaries = Prefs.getCurrentSummaries();
         if(savedInstanceState == null){
-            mSummaries = getIntent().getParcelableArrayListExtra("summaries");
             mFilterShowing = false;
         }else{
-            mSummaries = savedInstanceState.getParcelableArrayList("summaries");
             mFilterShowing = savedInstanceState.getBoolean("filter_showing");
             index = savedInstanceState.getInt("list_index", -1);
         }
@@ -90,7 +90,7 @@ FilterFragment.Callback{
         mMultiPane = findViewById(R.id.secondary_content) != null;
 
         Collections.sort(mSummaries, mAlphabeticalComparator);
-        mSummaryListFragment = SummaryListFragment.newInstance(mSummaries, index);
+        mSummaryListFragment = SummaryListFragment.newInstance(index);
         getSupportFragmentManager().beginTransaction().replace(R.id.content, mSummaryListFragment).commit();
 
         mFilterFragment = FilterFragment.newInstance();
@@ -116,7 +116,6 @@ FilterFragment.Callback{
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList("summaries", mSummaries);
         outState.putBoolean("filter_showing", mFilterShowing);
         if(mSummaryListFragment != null){
             outState.putInt("list_index", mSummaryListFragment.getIndex());
@@ -165,6 +164,7 @@ FilterFragment.Callback{
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_home, menu);
         mSearchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.action_search));
+        mSearchView.setQueryHint(getString(R.string.query_hint));
         mSearchView.setOnQueryTextListener(mOnQueryTextListener);
         ViewHelper.colorSearchView(mSearchView);
         return true;
@@ -188,6 +188,13 @@ FilterFragment.Callback{
                 }else{
                     showFilter();
                 }
+                return true;
+            case R.id.action_share:
+                Intent sendIntent = new Intent();
+                sendIntent.setAction(Intent.ACTION_SEND);
+                sendIntent.putExtra(Intent.EXTRA_TEXT, "View movie listings with their rotten tomatoes scores using this cool app!  Download it at https://play.google.com/store/apps/details?id=com.sixbynine.movieoracle");
+                sendIntent.setType("text/plain");
+                startActivity(Intent.createChooser(sendIntent, "Share App"));
                 return true;
             case R.id.action_rate:
                 Intent i = MyApplication.getStoreIntent();
@@ -293,6 +300,11 @@ FilterFragment.Callback{
     @Override
     public boolean shouldShowBigPoster() {
         return false;
+    }
+
+    @Override
+    public boolean showLinks() {
+        return true;
     }
 
     @Override

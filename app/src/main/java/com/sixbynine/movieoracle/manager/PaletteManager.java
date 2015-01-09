@@ -21,7 +21,7 @@ public class PaletteManager extends Manager{
     }
 
     private PaletteManager(){
-        mPalettes = new HashMap<String, Palette>();
+        mPalettes = new HashMap<>();
     }
 
     public void loadPalette(final RottenTomatoesSummary summary, Bitmap bmp){

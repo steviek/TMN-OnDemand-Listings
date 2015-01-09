@@ -137,11 +137,15 @@ public class FilterFragment extends Fragment{
         view.findViewById(R.id.clear_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mFilterParameter = null;
-                mFilter = Filter.NONE;
-                mSort = Sort.ALPHABETICAL;
-                initFilteredViews();
-                mCallback.applyFilterAndSort(mFilter, mSort, mFilterParameter);
+                if(mFilterParameter == null && mFilter == Filter.NONE && mSort == Sort.ALPHABETICAL){
+                    mCallback.hideFilter();
+                }else{
+                    mFilterParameter = null;
+                    mFilter = Filter.NONE;
+                    mSort = Sort.ALPHABETICAL;
+                    initFilteredViews();
+                    mCallback.applyFilterAndSort(mFilter, mSort, mFilterParameter);
+                }
             }
         });
 
