@@ -4,23 +4,29 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 
-import com.google.gson.Gson;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sixbynine.movieoracle.MyApplication;
-import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryMovieSummary;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryResult;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class Prefs {
-	private static SharedPreferences prefs;
+
+    private static ObjectMapper objectMapper;
+    private static SharedPreferences prefs;
 
 	private static void init(){
         if(prefs == null && MyApplication.getInstance() != null) {
+            objectMapper = MyApplication.getInstance().getObjectMapper();
             prefs = MyApplication.getInstance().getSharedPreferences("movieoracle", Context.MODE_MULTI_PROCESS);
         }
 	}
@@ -54,19 +60,21 @@ public class Prefs {
     }
 
     public static Set<String> getStringSet(String key){
+        return getStringSet(key, new HashSet<String>());
+    }
+
+    public static Set<String> getStringSet(String key, Set<String> fallback){
         init();
         if(Build.VERSION.SDK_INT >= 11){
-            return prefs.getStringSet(key, new HashSet<String>());
+            return prefs.getStringSet(key, fallback);
         }else{
             String rawString = prefs.getString(key, "");
             if(rawString.isEmpty()){
-                return new HashSet<String>();
+                return fallback;
             }else{
                 String[] parts = rawString.split(";;;");
-                Set<String> returnVal = new HashSet<String>(parts.length);
-                for(String s : parts){
-                    returnVal.add(s);
-                }
+                Set<String> returnVal = new HashSet<>(parts.length);
+                Collections.addAll(returnVal, parts);
                 return returnVal;
             }
         }
@@ -93,209 +101,56 @@ public class Prefs {
         if(prefs != null){
             return getStringSet(Keys.IGNORE_LIST);
         }
-        return new HashSet<String>();
+        return new HashSet<>();
     }
 
-    public static Set<String> getMutableIgnoreList(){
-        Set<String> ignoreList = getIgnoreList();
-        if(ignoreList == null){
-            return null;
-        }else{
-            return new HashSet<String>(ignoreList);
-        }
-    }
-
-    public static void saveExcludeList(Set<String> list){
+    public static void putCurrentResults(Map<String, RTMovieQueryResult> queryResultMap) {
         init();
-        if(prefs != null){
-            putStringSet(Keys.EXCLUDE_LIST, list);
+        for (Map.Entry<String, RTMovieQueryResult> entry : queryResultMap.entrySet()) {
+            putSummary(entry.getKey(), entry.getValue());
+        }
+        putStringSet("rt-movies", queryResultMap.keySet());
+    }
+
+    public static Map<String, RTMovieQueryResult> getCurrentResults() {
+        init();
+        Set<String> movies = getStringSet("rt-movies");
+        Map<String, RTMovieQueryResult> queryResultMap = new HashMap<>();
+        for (String movie : movies) {
+            queryResultMap.put(movie, getSummary(movie));
+        }
+        return queryResultMap;
+    }
+
+    public static List<RTMovieQueryMovieSummary> getCurrentBestSummaries() {
+        Map<String, RTMovieQueryResult> queryResultMap = getCurrentResults();
+        List<RTMovieQueryMovieSummary> summaries = new ArrayList<>();
+        for (Map.Entry<String, RTMovieQueryResult> entry : queryResultMap.entrySet()) {
+            summaries.add(entry.getValue().getBestMatch(entry.getKey()));
+        }
+        return summaries;
+    }
+
+    public static RTMovieQueryResult getSummary(String title) {
+        init();
+        try {
+            return objectMapper.readValue(prefs.getString("rt-movie-" + title, null), RTMovieQueryResult.class);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
         }
     }
 
-    public static void saveSeriesList(Set<String> list){
+    public static void putSummary(String title, RTMovieQueryResult queryResult) {
         init();
-        if(prefs != null){
-            putStringSet(Keys.SERIES_LIST, list);
-        }
+        prefs.edit().putString("rt-movie-" + title, MyApplication.getInstance().writeValueAsSring(queryResult)).apply();
     }
-
-    public static void savePopulatedList(Set<String> list){
-        init();
-        if(prefs != null){
-            putStringSet(Keys.POPULATED_LIST, list);
-        }
-    }
-
-    public static Set<String> getExcludeList(){
-        init();
-        if(prefs != null){
-            return getStringSet(Keys.EXCLUDE_LIST);
-        }
-        return new HashSet<String>();
-    }
-
-    public static Set<String> getSeriesList(){
-        init();
-        if(prefs != null){
-            return getStringSet(Keys.SERIES_LIST);
-        }
-        return new HashSet<String>();
-    }
-
-    public static Set<String> getPopulatedList(){
-        init();
-        if(prefs != null){
-            return getStringSet(Keys.POPULATED_LIST);
-        }
-        return null;
-    }
-
-    public static void saveUpdateDay(int day){
-        init();
-        if(prefs != null){
-            prefs.edit().putInt(Keys.UPDATE_DAY, day).apply();
-        }
-    }
-
-    public static int getUpdateDay(int day){
-        init();
-        if(prefs != null){
-            return prefs.getInt(Keys.UPDATE_DAY, Calendar.TUESDAY);
-        }
-        return Calendar.TUESDAY;
-    }
-
-    public static void saveTmnUrl(String url){
-        init();
-        if(prefs != null){
-            prefs.edit().putString(Keys.TMN_URL, url).apply();
-        }
-    }
-
-    public static String getTmnUrl(){
-        init();
-        if(prefs != null){
-            return prefs.getString(Keys.TMN_URL, "http://www.themovienetwork.ca/ondemand/print?network=tmn");
-        }
-        return "http://www.themovienetwork.ca/ondemand/print?network=tmn";
-    }
-
-    public static void saveAllSummaries(ArrayList<RottenTomatoesSummary> allSummaries){
-        init();
-        if(prefs != null){
-            final int size = allSummaries.size();
-            Set<String> stringSet = new HashSet<String>(size);
-            Gson gson = new Gson();
-            for(int i = 0; i < size; i ++){
-                stringSet.add(gson.toJson(allSummaries.get(i)));
-            }
-            putStringSet(Keys.ALL_SUMMARIES, stringSet);
-        }
-    }
-
-    public static ArrayList<RottenTomatoesSummary> getAllSummaries(){
-        init();
-        if(prefs != null){
-            Set<String> stringSet = getStringSet(Keys.ALL_SUMMARIES);
-            ArrayList<RottenTomatoesSummary> summaries = new ArrayList<RottenTomatoesSummary>(stringSet.size());
-            Gson gson = new Gson();
-            for(String s : stringSet){
-                if(!s.equals("null"))
-                    summaries.add(gson.fromJson(s, RottenTomatoesSummary.class));
-            }
-            return summaries;
-        }
-        return null;
-    }
-
-    public static void saveCurrentSummaries(ArrayList<RottenTomatoesSummary> currentSummaries){
-        init();
-        if(prefs != null){
-            final int size = currentSummaries.size();
-            Set<String> stringSet = new HashSet<String>(size);
-            Gson gson = new Gson();
-            for(int i = 0; i < size; i ++){
-                stringSet.add(gson.toJson(currentSummaries.get(i)));
-            }
-            putStringSet(Keys.CURRENT_SUMMARIES, stringSet);
-        }
-    }
-
-    public static ArrayList<RottenTomatoesSummary> getCurrentSummaries(){
-        init();
-        if(prefs != null){
-            Set<String> stringSet = getStringSet(Keys.CURRENT_SUMMARIES);
-            ArrayList<RottenTomatoesSummary> summaries = new ArrayList<RottenTomatoesSummary>(stringSet.size());
-            Gson gson = new Gson();
-            for(String s : stringSet){
-                if(!s.equals("null"))
-                    summaries.add(gson.fromJson(s, RottenTomatoesSummary.class));
-            }
-            return summaries;
-        }
-        return null;
-    }
-
-    public static Map<String, RottenTomatoesSummary> getAllSummariesMap(){
-        init();
-        if(prefs != null){
-            Set<String> stringSet = getStringSet(Keys.ALL_SUMMARIES);
-            Map<String, RottenTomatoesSummary> summaries = new HashMap<String, RottenTomatoesSummary>(stringSet.size());
-            Gson gson = new Gson();
-            for(String s : stringSet){
-                if(!s.equals("null")){
-                    RottenTomatoesSummary summary = gson.fromJson(s, RottenTomatoesSummary.class);
-                    summaries.put(summary.getTitle(), summary);
-                }
-            }
-            return summaries;
-        }
-        return null;
-    }
-
-    /*public static void setFilter(Filter filter){
-        init();
-        if(prefs != null){
-            prefs.edit().putInt(Keys.FILTER, filter.id).apply();
-        }
-    }
-
-    public static Filter getFilter(){
-        init();
-        if(prefs != null){
-            return Filter.fromId(prefs.getInt(Keys.FILTER, Filter.NONE.id));
-        }
-        return Filter.NONE;
-    }
-
-    public static void setSort(Sort sort){
-        init();
-        if(prefs != null){
-            prefs.edit().putInt(Keys.SORT, sort.id).apply();
-        }
-    }
-
-    public static Sort getSort(){
-        init();
-        if(prefs != null){
-            return Sort.fromId(prefs.getInt(Keys.SORT, Sort.ALPHABETICAL.id));
-        }
-        return Sort.ALPHABETICAL;
-    }*/
 
     public class Keys{
         public static final String IGNORE_LIST = "IGNORE_LIST";
         public static final String EXCLUDE_LIST = "EXCLUDE_LIST";
-        public static final String SERIES_LIST = "SERIES_LIST";
-        public static final String POPULATED_LIST = "POPULATED_LIST";
-        public static final String TMN_URL = "tmn-url";
-        public static final String UPDATE_DAY = "update-day";
         private static final String LAST_SAVE_DATE = "LAST_SAVE_DATE";
         public static final String ALL_SUMMARIES = "ALL_SUMMARIES";
-        public static final String CURRENT_SUMMARIES = "CURRENT_SUMMARIES";
-
-        public static final String FILTER = "FILTER";
-        public static final String SORT = "SORT";
+        public static final String CURRENT_SUMMARIES = "CURRENT_SUMMARIES_2";
     }
 
 	

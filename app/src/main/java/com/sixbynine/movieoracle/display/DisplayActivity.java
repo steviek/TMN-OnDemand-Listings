@@ -18,21 +18,21 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import com.sixbynine.movieoracle.MyApplication;
 import com.sixbynine.movieoracle.R;
+import com.sixbynine.movieoracle.Subscribes;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryCastMember;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryMovieSummary;
+import com.sixbynine.movieoracle.events.PaletteLoadedEvent;
 import com.sixbynine.movieoracle.home.DisplayFragment;
-import com.sixbynine.movieoracle.object.RottenTomatoesActorBrief;
-import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
 import com.sixbynine.movieoracle.ui.activity.BaseActivity;
+import com.squareup.otto.Subscribe;
 
-/**
- * Created by steviekideckel on 11/13/14.
- */
-public class DisplayActivity extends BaseActivity implements DisplayFragment.Callback{
+@Subscribes
+public class DisplayActivity extends BaseActivity implements DisplayFragment.Callback {
 
     private DisplayFragment mDisplayFragment;
-    private ViewPager mPager;
-    private RottenTomatoesSummary mSummary;
-    private float minAlpha = 0.7f;
+    private RTMovieQueryMovieSummary mSummary;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,18 +41,18 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
         getSupportActionBar().setTitle("");
         mSummary = getIntent().getParcelableExtra("summary");
 
-        mPager = (ViewPager) findViewById(R.id.view_pager);
-        mPager.setAdapter(new MyPagerAdapter(getSupportFragmentManager()));
-        mPager.setCurrentItem(1);
-        mPager.setPageTransformer(false, new ViewPager.PageTransformer() {
+        ViewPager pager = (ViewPager) findViewById(R.id.view_pager);
+        pager.setAdapter(new MyPagerAdapter(getSupportFragmentManager()));
+        pager.setCurrentItem(1);
+        pager.setPageTransformer(false, new ViewPager.PageTransformer() {
             @Override
             public void transformPage(View view, float v) {
-                if(Build.VERSION.SDK_INT >= 11) {
+                if (Build.VERSION.SDK_INT >= 11) {
                     view.setAlpha(1 - Math.abs(v));
                 }
             }
         });
-        mPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+        pager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int i, float v, int i2) {
 
@@ -60,7 +60,7 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
 
             @Override
             public void onPageSelected(int i) {
-                if(i != 1){
+                if (i != 1) {
                     finish();
                 }
             }
@@ -73,9 +73,9 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
     }
 
     @Override
-    public void onActorClicked(RottenTomatoesActorBrief actor) {
+    public void onActorClicked(RTMovieQueryCastMember actor) {
         Intent intent = new Intent();
-        intent.putExtra("actor", actor.getName());
+        intent.putExtra("actor", MyApplication.getInstance().writeValueAsSring(actor));
         setResult(RESULT_OK, intent);
         finish();
     }
@@ -88,12 +88,13 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
     }
 
     @Override
-    public void presentPalette(Palette palette) {
-        Palette.Swatch swatch = palette.getDarkVibrantSwatch();
+    @Subscribe
+    public void onPaletteLoaded(PaletteLoadedEvent event) {
+        Palette.Swatch swatch = event.getPalette().getDarkVibrantSwatch();
         if(swatch != null) {
             getSupportActionBar().setBackgroundDrawable(new ColorDrawable(swatch.getRgb()));
             if(Build.VERSION.SDK_INT >= 21){
-                getWindow().setStatusBarColor(getResources().getColor(android.R.color.black));
+                getWindow().setStatusBarColor(getResources().getColor(android.R.color.black, getTheme()));
             }
         }
     }
@@ -113,7 +114,7 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
         menu.findItem(R.id.action_imdb).setVisible(imdbId != null && !imdbId.isEmpty());
         String rtId = null;
         if(mSummary.getLinks() != null){
-            rtId = mSummary.getLinks().getAlternate();
+            rtId = mSummary.getLinks().getAlternative();
         }
         menu.findItem(R.id.action_rt).setVisible(rtId != null && !rtId.isEmpty());
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -131,7 +132,7 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
                 startActivity(i);
                 return true;
             case R.id.action_rt:
-                String url2 = mSummary.getLinks().getAlternate();
+                String url2 = mSummary.getLinks().getAlternative();
                 Intent i2 = new Intent(Intent.ACTION_VIEW);
                 i2.setData(Uri.parse(url2));
                 startActivity(i2);

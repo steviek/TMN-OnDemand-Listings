@@ -1,86 +1,80 @@
 package com.sixbynine.movieoracle.manager;
 
-import android.graphics.Bitmap;
+import android.os.AsyncTask;
 
-import com.sixbynine.movieoracle.media.Catalogue;
-import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
-import com.sixbynine.movieoracle.rt.RottenTomatoesRestClient;
-import com.sixbynine.movieoracle.util.BitmapDownloader;
-import com.sixbynine.movieoracle.util.Prefs;
+import com.sixbynine.movieoracle.MyApplication;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.RottenTomatoesService;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryResult;
+import com.sixbynine.movieoracle.datamodel.tmn.TMNResources;
+import com.sixbynine.movieoracle.events.RTMovieQueryResultLoadedEvent;
+import com.sixbynine.movieoracle.events.RTMovieQueryResultMapLoadedEvent;
+import com.sixbynine.movieoracle.util.Keys;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
-/**
- * Created by steviekideckel on 11/2/14.
- */
-public class RottenTomatoesManager extends Manager{
-    private static RottenTomatoesManager sInstance;
-    private ArrayList<RottenTomatoesSummary> mSummaries;
-    private BitmapDownloader<RottenTomatoesSummary> mPosterDownloader;
+import retrofit.Retrofit;
 
-    public static RottenTomatoesManager getInstance(){
-        if(sInstance == null){
-            synchronized (Manager.class){
-                if(sInstance == null){
-                    sInstance = new RottenTomatoesManager();
-                }
+public final class RottenTomatoesManager {
+
+    private static final RottenTomatoesService ROTTEN_TOMATOES = new Retrofit.Builder()
+            .baseUrl("http://api.rottentomatoes.com/api/public/v1.0")
+            .build()
+            .create(RottenTomatoesService.class);
+
+    private static Map<String, RTMovieQueryResult> movieQueryResultMap;
+
+    public static Map<String, RTMovieQueryResult> search(TMNResources tmnResources) {
+        if (movieQueryResultMap == null) {
+            new SearchMoviesAsyncTask(tmnResources).execute();
+        }
+        return movieQueryResultMap;
+    }
+
+    private static class SearchMoviesAsyncTask extends AsyncTask<Void, Void, Void> {
+
+        private final TMNResources resources;
+
+        public SearchMoviesAsyncTask(TMNResources resources) {
+            this.resources = resources;
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            movieQueryResultMap = new HashMap<>();
+
+            Set<String> movies = resources.getMovies();
+            Set<String> series = resources.getSeries();
+
+            int i = 1;
+            int total = resources.getMovies().size() + resources.getSeries().size();
+
+            for (String m : movies) {
+                addIfNecessary(m, i++, total);
+            }
+
+            for (String s : series) {
+                i++;
+                addIfNecessary(s, i++, total);
+            }
+
+            return null;
+        }
+
+        private static void addIfNecessary(String name, int num, int total) {
+            if (movieQueryResultMap.get(name) == null) {
+                RTMovieQueryResult queryResult = ROTTEN_TOMATOES.searchMovies(name, Keys.RT_API_KEY);
+                movieQueryResultMap.put(name, queryResult);
+                MyApplication.getInstance()
+                        .getBus()
+                        .post(new RTMovieQueryResultLoadedEvent(name, queryResult, num, total));
             }
         }
-        return sInstance;
-    }
 
-    public RottenTomatoesManager(){
-        mPosterDownloader = new BitmapDownloader<RottenTomatoesSummary>() {
-            @Override
-            protected String getUrl(RottenTomatoesSummary object) {
-                String urldisplay = object.getPosters().getDetailed();
-                return urldisplay.replace("tmb","det");
-            }
-
-            @Override
-            protected void onSuccess(RottenTomatoesSummary rottenTomatoesSummary, Bitmap bmp) {
-                publish(UpdateEvent.POSTER_LOADED, rottenTomatoesSummary, bmp);
-            }
-
-            @Override
-            protected void onFailure(RottenTomatoesSummary rottenTomatoesSummary) {
-                publish(UpdateEvent.POSTER_FAILED_TO_LOAD, rottenTomatoesSummary);
-            }
-        };
-    }
-
-    public ArrayList<RottenTomatoesSummary> getSummaries(){
-        return mSummaries;
-    }
-
-    public void loadListings(Catalogue catalogue){
-        if(mSummaries != null){
-            publish(UpdateEvent.RT_LISTINGS_LOADED, mSummaries);
-        }else{
-            RottenTomatoesRestClient.getMovies(new RottenTomatoesRestClient.Callback() {
-                @Override
-                public void onListingsLoaded(ArrayList<RottenTomatoesSummary> movies) {
-                    mSummaries = movies;
-                    Prefs.saveCurrentSummaries(movies);
-                    publish(UpdateEvent.RT_LISTINGS_LOADED, movies);
-                }
-
-                @Override
-                public void onListingsFailure() {
-                    publish(UpdateEvent.RT_LISTINGS_FAILURE);
-                }
-
-                @Override
-                public void onListingLoaded(String title, int soFar, int total) {
-                    publish(UpdateEvent.RT_LISTING_LOADED, title, soFar, total);
-                }
-            }, catalogue);
+        @Override
+        protected void onPostExecute(Void queryResult) {
+            MyApplication.getInstance().getBus().post(new RTMovieQueryResultMapLoadedEvent(movieQueryResultMap));
         }
     }
-
-    public void getPoster(RottenTomatoesSummary summary){
-        mPosterDownloader.loadImage(summary);
-    }
-
-
 }

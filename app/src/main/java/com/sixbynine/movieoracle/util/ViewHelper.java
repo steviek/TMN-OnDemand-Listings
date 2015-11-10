@@ -7,9 +7,6 @@ import android.widget.ImageView;
 
 import com.sixbynine.movieoracle.R;
 
-/**
- * Created by steviekideckel on 11/23/14.
- */
 public class ViewHelper {
 
     public static void colorSearchView(SearchView searchView){

@@ -1,6 +1,8 @@
 package com.sixbynine.movieoracle.home;
 
-import android.app.Activity;
+import com.google.common.collect.FluentIterable;
+
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -11,37 +13,33 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.sixbynine.movieoracle.BaseFragment;
 import com.sixbynine.movieoracle.R;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryMovieSummary;
 import com.sixbynine.movieoracle.model.Filter;
-import com.sixbynine.movieoracle.model.Sort;
-import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
-import com.sixbynine.movieoracle.ui.fragment.ActionBarFragment;
+import com.sixbynine.movieoracle.model.Sorting;
 import com.sixbynine.movieoracle.util.Prefs;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by steviekideckel on 11/2/14.
- */
-public class SummaryListFragment extends ActionBarFragment{
+public class SummaryListFragment extends BaseFragment {
 
-    private ListView mListView;
     private SummaryListAdapter mAdapter;
     private TextView mNoResultsTextView;
 
-    private ArrayList<RottenTomatoesSummary> mAllSummaries;
-    private ArrayList<RottenTomatoesSummary> mDisplaySummaries;
+    private List<RTMovieQueryMovieSummary> mAllSummaries;
     private Callback mCallback;
 
     private int mIndex;
 
-    public interface Callback{
-        public void onItemSelected(int index, RottenTomatoesSummary item);
-        public void onItemMovedToTop(int index, RottenTomatoesSummary item);
+    public interface Callback {
+        void onItemSelected(int index, RTMovieQueryMovieSummary item);
+
+        void onItemMovedToTop(int index, RTMovieQueryMovieSummary item);
     }
 
-    public static SummaryListFragment newInstance(int index){
+    public static SummaryListFragment newInstance(int index) {
         SummaryListFragment frag = new SummaryListFragment();
         Bundle b = new Bundle();
         b.putInt("index", index);
@@ -50,26 +48,25 @@ public class SummaryListFragment extends ActionBarFragment{
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        if(activity instanceof Callback){
-            mCallback = (Callback) activity;
-        }else{
-            throw new IllegalStateException(activity.toString() + " must implement Callback interface");
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof Callback) {
+            mCallback = (Callback) context;
+        } else {
+            throw new IllegalStateException(context.toString() + " must implement Callback interface");
         }
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mAllSummaries = Prefs.getCurrentSummaries();
-        if(savedInstanceState == null){
-            mDisplaySummaries = new ArrayList<>(mAllSummaries);
+        mAllSummaries = Prefs.getCurrentBestSummaries();
+        if (savedInstanceState == null) {
             mIndex = getArguments().getInt("index");
-            if(mIndex == -1){
+            if (mIndex == -1) {
                 mIndex = 0;
             }
-        }else{
+        } else {
             mIndex = savedInstanceState.getInt("index", 0);
         }
     }
@@ -80,25 +77,25 @@ public class SummaryListFragment extends ActionBarFragment{
         outState.putInt("index", mIndex);
     }
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_summary_list, container, false);
 
-        mListView = (ListView) view.findViewById(R.id.list_view);
+        ListView listView = (ListView) view.findViewById(R.id.list_view);
 
         mNoResultsTextView = (TextView) view.findViewById(R.id.no_results_view);
 
-        mAdapter = new SummaryListAdapter(getActivity(), mDisplaySummaries);
-        mListView.setAdapter(mAdapter);
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mAdapter = new SummaryListAdapter(getActivity(), new ArrayList<RTMovieQueryMovieSummary>());
+        listView.setAdapter(mAdapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if(mCallback != null) mCallback.onItemSelected(position, mDisplaySummaries.get(position));
+                if (mCallback != null) mCallback.onItemSelected(position, mAdapter.getItem(position));
             }
         });
-        mListView.setOnScrollListener(new AbsListView.OnScrollListener() {
+        listView.setOnScrollListener(new AbsListView.OnScrollListener() {
             int lastFirstVisibleItem;
+
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
 
@@ -106,46 +103,26 @@ public class SummaryListFragment extends ActionBarFragment{
 
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                if(firstVisibleItem != lastFirstVisibleItem && !mDisplaySummaries.isEmpty()){
+                if (firstVisibleItem != lastFirstVisibleItem && !mAdapter.isEmpty()) {
                     lastFirstVisibleItem = firstVisibleItem;
-                    mCallback.onItemMovedToTop(firstVisibleItem, mDisplaySummaries.get(firstVisibleItem));
+                    mCallback.onItemMovedToTop(firstVisibleItem, mAdapter.getItem(firstVisibleItem));
                 }
                 mIndex = firstVisibleItem;
             }
         });
-        mListView.setSelection(mIndex);
-
-
+        listView.setSelection(mIndex);
 
         return view;
     }
 
-    public void sortAndFilter(Sort sort, Filter filter, String parameter){
-        Object param;
-        if(filter == Filter.ACTOR && parameter != null && parameter.equals(RottenTomatoesSummary.SELECT_ACTOR)){
-            param = null;
-        }else if(filter == Filter.RATING){
-            if(parameter != null && parameter.equals(RottenTomatoesSummary.RATING_FRESH)){
-                param = 60;
-            }else{
-                param = null;
-            }
-        }else{
-            param = parameter;
-        }
-        List<RottenTomatoesSummary> sortedAndFiltered =
-                RottenTomatoesSummary.sortAndFilterList(mAllSummaries, sort, filter, param);
-        mDisplaySummaries.clear();
-        mDisplaySummaries.addAll(sortedAndFiltered);
+    public void sortAndFilter(Sorting sort, Filter filter) {
+        mAdapter.clear();
+        mAdapter.addAll(FluentIterable.from(mAllSummaries).filter(filter).toSortedList(sort));
         mAdapter.notifyDataSetChanged();
-        mNoResultsTextView.setVisibility(mAdapter.getCount() == 0? View.VISIBLE : View.GONE);
+        mNoResultsTextView.setVisibility(mAdapter.getCount() == 0 ? View.VISIBLE : View.GONE);
     }
 
-    public int getIndex(){
+    public int getIndex() {
         return mIndex;
-    }
-
-    public void onPositionSelected(int position){
-        mAdapter.setSelectedIndex(position);
     }
 }

@@ -4,23 +4,14 @@ import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.sixbynine.movieoracle.SplashActivityCallback;
 import com.sixbynine.movieoracle.media.Catalogue;
 import com.sixbynine.movieoracle.media.Media;
 import com.sixbynine.movieoracle.media.Movie;
 import com.sixbynine.movieoracle.media.Series;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
-
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -172,10 +163,15 @@ public abstract class DataProcessor {
 	    }
 	}
 	
-	public static String getHtml(String url) throws ClientProtocolException, IOException
-	{
-		
-		HttpParams httpParameters = new BasicHttpParams();
+	public static String getHtml(String url) throws IOException {
+    OkHttpClient client = new OkHttpClient();
+    Request request = new Request.Builder()
+        .url(url)
+        .build();
+
+    Response response = client.newCall(request).execute();
+    return response.body().string();
+    /*HttpParams httpParameters = new BasicHttpParams();
 		HttpConnectionParams.setConnectionTimeout(httpParameters,3000); // 3s max for connection
 		HttpConnectionParams.setSoTimeout(httpParameters, 40000); // 4s max to get data
 		HttpClient httpclient = new DefaultHttpClient(httpParameters);
@@ -192,7 +188,7 @@ public abstract class DataProcessor {
 		String resString = sb.toString(); // Result is here
 
 		is.close(); // Close the stream
-	    return resString;
+	    return resString;*/
 	}
 	
 	private class DownloadData extends AsyncTask<String, Void, Media>{
@@ -222,9 +218,6 @@ public abstract class DataProcessor {
 				catalogue.add(result);
 			}
 			loadCount ++;
-			publishProgress();
-			
-			
 		}
 
 		@Override

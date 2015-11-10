@@ -1,9 +1,8 @@
 package com.sixbynine.movieoracle.home;
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,17 +10,17 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
+import com.sixbynine.movieoracle.BaseFragment;
 import com.sixbynine.movieoracle.R;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryMovieSummary;
 import com.sixbynine.movieoracle.model.Filter;
-import com.sixbynine.movieoracle.model.Sort;
+import com.sixbynine.movieoracle.model.NoFilter;
+import com.sixbynine.movieoracle.model.Sorting;
 import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
 
 import java.util.List;
 
-/**
- * Created by steviekideckel on 11/20/14.
- */
-public class FilterFragment extends Fragment{
+public class FilterFragment extends BaseFragment {
 
     private Spinner mFilterSpinner;
     private Spinner mSortSpinner;
@@ -31,55 +30,50 @@ public class FilterFragment extends Fragment{
     private Callback mCallback;
 
     private Filter mFilter;
-    private String mFilterParameter;
-    private Sort mSort;
+    private Sorting mSort;
 
-    public interface Callback{
-        public void applyFilterAndSort(Filter filter, Sort sort, String parameter);
-        public List<RottenTomatoesSummary> getSummaries();
-        public void hideFilter();
+    public interface Callback {
+        void applyFilterAndSort(Filter filter, Sorting sort);
+
+        List<RTMovieQueryMovieSummary> getSummaries();
+
+        void hideFilter();
     }
 
-    public static FilterFragment newInstance(){
-        return newInstance(Filter.NONE, Sort.ALPHABETICAL, null);
+    public static FilterFragment newInstance() {
+        return newInstance(new NoFilter(), Sorting.ALPHABETICAL);
     }
 
-    public static FilterFragment newInstance(Filter filter, Sort sort, String parameter){
+    public static FilterFragment newInstance(Filter filter, Sorting sort) {
         FilterFragment frag = new FilterFragment();
         Bundle b = new Bundle();
-        if(filter != null){
-            b.putInt("filter", filter.id);
+        if (filter != null) {
+            b.putParcelable("filter", filter);
         }
-        if(sort != null){
-            b.putInt("sort", sort.id);
-        }
-        if(parameter != null){
-            b.putString("param", parameter);
+        if (sort != null) {
+            b.putString("sort", sort.name());
         }
         frag.setArguments(b);
         return frag;
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        if(activity instanceof Callback){
-            mCallback = (Callback) activity;
-        }else{
-            throw new IllegalStateException(activity.toString() + " must implement Callback interface");
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof Callback) {
+            mCallback = (Callback) context;
+        } else {
+            throw new IllegalStateException(context.toString() + " must implement Callback interface");
         }
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(savedInstanceState == null){
+        if (savedInstanceState == null) {
             Bundle args = getArguments();
-            int filterKey = args.getInt("filter", -1);
-            if(filterKey != -1) mFilter = Filter.fromId(filterKey);
-            int sortKey = args.getInt("sort", -1);
-            if(sortKey != -1) mSort = Sort.fromId(sortKey);
-            mFilterParameter = args.getString("param");
+            mFilter = args.getParcelable("filter");
+            mSort = Sorting.valueOf(args.getString("sort"));
         }
     }
 
@@ -137,14 +131,13 @@ public class FilterFragment extends Fragment{
         view.findViewById(R.id.clear_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mFilterParameter == null && mFilter == Filter.NONE && mSort == Sort.ALPHABETICAL){
+                if (mFilter.showFilter() && mSort == Sorting.ALPHABETICAL) {
                     mCallback.hideFilter();
-                }else{
-                    mFilterParameter = null;
-                    mFilter = Filter.NONE;
-                    mSort = Sort.ALPHABETICAL;
+                } else {
+                    mFilter = new NoFilter();
+                    mSort = Sorting.ALPHABETICAL;
                     initFilteredViews();
-                    mCallback.applyFilterAndSort(mFilter, mSort, mFilterParameter);
+                    mCallback.applyFilterAndSort(mFilter, mSort);
                 }
             }
         });
@@ -152,19 +145,16 @@ public class FilterFragment extends Fragment{
         initFilteredViews();
 
 
-
         return view;
     }
 
-    private void initFilteredViews(){
-        if(mFilter != null){
+    private void initFilteredViews() {
+        if (mFilter != null) {
             mFilterSpinner.setSelection(mFilter.id);
 
-            if(mFilter == Filter.NONE){
+            if (!mFilter.showSpinner()) {
                 mFilterSpinnerOption.setVisibility(View.INVISIBLE);
-            }else if(mFilter == Filter.TITLE){
-                mFilterSpinnerOption.setVisibility(View.INVISIBLE);
-            }else{
+            } else {
                 mFilterSpinnerOption.setVisibility(View.VISIBLE);
                 List<String> choices = RottenTomatoesSummary.getAllChoices(mCallback.getSummaries(), mFilter);
                 ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
@@ -172,51 +162,38 @@ public class FilterFragment extends Fragment{
                         choices);
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 mFilterSpinnerOption.setAdapter(adapter);
-
-                if(mFilterParameter != null){
-                    int index = choices.indexOf(mFilterParameter);
-                    if(index != -1){
-                        mFilterSpinnerOption.setSelection(index);
-                    }
-                }
             }
 
         }
 
-        if(mSort != null){
+        if (mSort != null) {
             mSortSpinner.setSelection(mSort.id);
         }
     }
 
-    private void applyFilter(boolean initAfter){
+    private void applyFilter(boolean initAfter) {
 
         mFilter = Filter.fromId(mFilterSpinner.getSelectedItemPosition());
 
-        mSort = Sort.fromId(mSortSpinner.getSelectedItemPosition());
+        mSort = Sorting.fromId(mSortSpinner.getSelectedItemPosition());
 
-        if(mFilterSpinnerOption.getVisibility() == View.VISIBLE){
-            mFilterParameter = (String) mFilterSpinnerOption.getSelectedItem();
-        }else{
-            mFilterParameter = null;
-        }
-        mCallback.applyFilterAndSort(mFilter, mSort, mFilterParameter);
+        mCallback.applyFilterAndSort(mFilter, mSort);
 
-        if(initAfter){
+        if (initAfter) {
             initFilteredViews();
         }
     }
 
-    public void setFilter(Filter filter, String param){
+    public void setFilter(Filter filter) {
         mFilter = filter;
-        mFilterParameter = param;
         initFilteredViews();
     }
 
-    public Filter getFilter(){
+    public Filter getFilter() {
         return mFilter;
     }
 
-    public Sort getSort(){
+    public Sorting getSort() {
         return mSort;
     }
 }

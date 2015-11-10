@@ -1,11 +1,13 @@
 package com.sixbynine.movieoracle.home;
 
-import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.GridLayout;
 import android.text.SpannableString;
@@ -17,19 +19,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.sixbynine.movieoracle.R;
+import com.sixbynine.movieoracle.Subscribes;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryCastMember;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryMovieSummary;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryRatings;
+import com.sixbynine.movieoracle.events.PaletteLoadedEvent;
 import com.sixbynine.movieoracle.manager.PaletteManager;
-import com.sixbynine.movieoracle.manager.RottenTomatoesManager;
-import com.sixbynine.movieoracle.manager.UpdateEvent;
-import com.sixbynine.movieoracle.manager.UpdateListener;
-import com.sixbynine.movieoracle.object.RottenTomatoesActorBrief;
-import com.sixbynine.movieoracle.object.RottenTomatoesRatings;
-import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
-import com.sixbynine.movieoracle.ui.fragment.ActionBarFragment;
+import com.squareup.picasso.Picasso;
 
-/**
- * Created by steviekideckel on 11/11/14.
- */
-public class DisplayFragment extends ActionBarFragment implements UpdateListener{
+@Subscribes
+public class DisplayFragment extends Fragment {
 
     private ImageView mPoster;
     private TextView mTitle;
@@ -47,7 +46,6 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
     //private TextView mCastBody;
     private View mCastDivider;
     private ViewGroup mRatingsContainer;
-    private View mRoot;
 
     private TextView mLinksHeader;
     private View mLinksDivider;
@@ -59,21 +57,21 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
     private ViewGroup mBigPosterContainer;
     private ImageView mBigPoster;
 
-    private RottenTomatoesSummary mSummary;
+    private RTMovieQueryMovieSummary mSummary;
     private Callback mCallback;
 
     public interface Callback{
-        public void onActorClicked(RottenTomatoesActorBrief actor);
-        public void presentPalette(Palette palette);
-        public boolean shouldShowBigPoster();
-        public boolean showLinks();
+        void onActorClicked(RTMovieQueryCastMember actor);
+        void onPaletteLoaded(PaletteLoadedEvent event);
+        boolean shouldShowBigPoster();
+        boolean showLinks();
     }
 
     private View.OnClickListener mRottenTomatoesClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             if(v == mRatingsContainer || v == mRtText){
-                String url = mSummary.getLinks().getAlternate();
+                String url = mSummary.getLinks().getAlternative();
                 Intent i = new Intent(Intent.ACTION_VIEW);
                 i.setData(Uri.parse(url));
                 startActivity(i);
@@ -95,80 +93,61 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
     };
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        if(activity instanceof Callback){
-            mCallback = (Callback) activity;
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if(context instanceof Callback){
+            mCallback = (Callback) context;
         }else{
-            throw new ClassCastException(activity.toString() + " must implement Callback interface");
+            throw new ClassCastException(context.toString() + " must implement Callback interface");
         }
     }
 
-    public static DisplayFragment newInstance(RottenTomatoesSummary summary){
+    public static DisplayFragment newInstance(RTMovieQueryMovieSummary summary){
         DisplayFragment frag = new DisplayFragment();
-        Bundle b = new Bundle();
-        b.putParcelable("summary", summary);
-        frag.setArguments(b);
+        frag.mSummary = summary;
         return frag;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if(getArguments() != null){
-            mSummary = getArguments().getParcelable("summary");
-        }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        RottenTomatoesManager.getInstance().subscribe(this);
-        RottenTomatoesManager.getInstance().getPoster(mSummary);
-        PaletteManager.getInstance().subscribe(this);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        RottenTomatoesManager.getInstance().unSubscribe(this);
-        PaletteManager.getInstance().unSubscribe(this);
+        getPoster();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        mRoot = inflater.inflate(R.layout.fragment_display, container, false);
+        View root = inflater.inflate(R.layout.fragment_display, container, false);
 
-        mPoster = (ImageView) mRoot.findViewById(R.id.poster);
-        mTitle = (TextView) mRoot.findViewById(R.id.title);
-        mRuntime = (TextView) mRoot.findViewById(R.id.runtime);
-        mYear = (TextView) mRoot.findViewById(R.id.year);
-        mCriticFresh = (TextView) mRoot.findViewById(R.id.critic_fresh_text_view);
-        mCriticRotten = (TextView) mRoot.findViewById(R.id.critic_rotten_text_view);
-        mAudienceFresh = (TextView) mRoot.findViewById(R.id.audience_fresh_text_view);
-        mAudienceRotten = (TextView) mRoot.findViewById(R.id.audience_rotten_text_view);
-        mSynopsisHeader = (TextView) mRoot.findViewById(R.id.synopsis_header);
-        mSynopsisDivider = mRoot.findViewById(R.id.synopsis_divider);
-        mSynopsisBody = (TextView) mRoot.findViewById(R.id.synopsis_text);
-        mCastHeader = (TextView) mRoot.findViewById(R.id.cast_header);
-        mCastDivider = mRoot.findViewById(R.id.cast_divider);
-        mCastContainer = (GridLayout) mRoot.findViewById(R.id.cast_container);
-        mRatingsContainer = (ViewGroup) mRoot.findViewById(R.id.ratings_container);
+        mPoster = (ImageView) root.findViewById(R.id.poster);
+        mTitle = (TextView) root.findViewById(R.id.title);
+        mRuntime = (TextView) root.findViewById(R.id.runtime);
+        mYear = (TextView) root.findViewById(R.id.year);
+        mCriticFresh = (TextView) root.findViewById(R.id.critic_fresh_text_view);
+        mCriticRotten = (TextView) root.findViewById(R.id.critic_rotten_text_view);
+        mAudienceFresh = (TextView) root.findViewById(R.id.audience_fresh_text_view);
+        mAudienceRotten = (TextView) root.findViewById(R.id.audience_rotten_text_view);
+        mSynopsisHeader = (TextView) root.findViewById(R.id.synopsis_header);
+        mSynopsisDivider = root.findViewById(R.id.synopsis_divider);
+        mSynopsisBody = (TextView) root.findViewById(R.id.synopsis_text);
+        mCastHeader = (TextView) root.findViewById(R.id.cast_header);
+        mCastDivider = root.findViewById(R.id.cast_divider);
+        mCastContainer = (GridLayout) root.findViewById(R.id.cast_container);
+        mRatingsContainer = (ViewGroup) root.findViewById(R.id.ratings_container);
         mRatingsContainer.setOnClickListener(mRottenTomatoesClickListener);
 
-        mLinksHeader = (TextView) mRoot.findViewById(R.id.links_header);
-        mLinksDivider = mRoot.findViewById(R.id.links_divider);
-        mImdbText = (TextView) mRoot.findViewById(R.id.links_imdb);
-        mImdbDivider = mRoot.findViewById(R.id.links_imdb_divider);
-        mRtText = (TextView) mRoot.findViewById(R.id.links_rotten_tomatoes);
-        mRtDivider = mRoot.findViewById(R.id.links_rotten_tomatoes_divider);
+        mLinksHeader = (TextView) root.findViewById(R.id.links_header);
+        mLinksDivider = root.findViewById(R.id.links_divider);
+        mImdbText = (TextView) root.findViewById(R.id.links_imdb);
+        mImdbDivider = root.findViewById(R.id.links_imdb_divider);
+        mRtText = (TextView) root.findViewById(R.id.links_rotten_tomatoes);
+        mRtDivider = root.findViewById(R.id.links_rotten_tomatoes_divider);
         mImdbText.setOnClickListener(mImdbClickListener);
         mRtText.setOnClickListener(mRottenTomatoesClickListener);
 
-        mBigPosterContainer = (ViewGroup) mRoot.findViewById(R.id.big_poster_container);
-        mBigPoster = (ImageView) mRoot.findViewById(R.id.big_poster);
+        mBigPosterContainer = (ViewGroup) root.findViewById(R.id.big_poster_container);
+        mBigPoster = (ImageView) root.findViewById(R.id.big_poster);
 
-        return mRoot;
+        return root;
     }
 
     @Override
@@ -177,35 +156,31 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
         setSummary(mSummary);
     }
 
-    public RottenTomatoesSummary getSummary(){
-        return mSummary;
-    }
-
-    public void setSummary(RottenTomatoesSummary summary){
+    public void setSummary(RTMovieQueryMovieSummary summary) {
         mSummary = summary;
         mTitle.setText(mSummary.getTitle());
         mTitle.setSelected(true);
 
-        if(mSummary.getRuntimeAsInt() > 0){
-            mRuntime.setText(getString(R.string.n_minutes, mSummary.getRuntimeAsInt()));
-        }else{
+        if (mSummary.getRuntime() > 0) {
+            mRuntime.setText(getString(R.string.n_minutes, mSummary.getRuntime()));
+        } else {
             mRuntime.setVisibility(View.INVISIBLE);
         }
 
-        if(mSummary.getYearAsInt() > 0){
+        if (mSummary.getYear() > 0) {
             mYear.setText(mSummary.getYear());
-        }else{
+        } else {
             mYear.setVisibility(View.INVISIBLE);
         }
 
 
-        if(mSummary.getCast() == null || mSummary.getCast().isEmpty()){
+        if (mSummary.getCast() == null || mSummary.getCast().isEmpty()) {
             hideCast();
-        }else{
+        } else {
             showCast();
             mCastContainer.removeAllViews();
-            for(RottenTomatoesActorBrief actor : mSummary.getCast()){
-                TextView textView = (TextView) getActionBarActivity().getLayoutInflater().inflate(R.layout.text_view_actor, null);
+            for (RTMovieQueryCastMember actor : mSummary.getCast()) {
+                TextView textView = (TextView) getActivity().getLayoutInflater().inflate(R.layout.text_view_actor, null);
                 textView.setTag(actor);
                 SpannableString string = new SpannableString(actor.getName());
                 string.setSpan(new UnderlineSpan(), 0, string.length(), 0);
@@ -214,21 +189,21 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
                 textView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        mCallback.onActorClicked((RottenTomatoesActorBrief) v.getTag());
+                        mCallback.onActorClicked((RTMovieQueryCastMember) v.getTag());
                     }
                 });
             }
         }
 
-        if(mSummary.getSynopsis() == null || mSummary.getSynopsis().isEmpty()){
+        if (mSummary.getSynopsis() == null || mSummary.getSynopsis().isEmpty()) {
             hideSynopsis();
-        }else{
+        } else {
             showSynopsis();
             mSynopsisBody.setText(mSummary.getSynopsis());
         }
 
 
-        RottenTomatoesRatings ratings = mSummary.getRatings();
+        RTMovieQueryRatings ratings = mSummary.getRatings();
         if(ratings != null){
             mRatingsContainer.setVisibility(View.VISIBLE);
             if(ratings.getCriticsScore() > 0){
@@ -264,14 +239,51 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
         }
 
         setLinks(mSummary.getAltIds() != null && mSummary.getAltIds().getImdbId() != null,
-                mSummary.getLinks() != null && mSummary.getLinks().getAlternate() != null);
+                mSummary.getLinks() != null && mSummary.getLinks().getAlternative() != null);
 
         if(isResumed()){
             mPoster.setImageResource(0);
-            RottenTomatoesManager.getInstance().getPoster(mSummary);
+            getPoster();
         }
+    }
 
+    private void getPoster() {
+        Picasso.with(getContext())
+                .load(mSummary.getPosters().getDetailed())
+                .into(mPoster, new com.squareup.picasso.Callback() {
+                    @Override
+                    public void onSuccess() {
+                        if (getContext() != null) {
+                            Bitmap bitmap = ((BitmapDrawable) mPoster.getDrawable()).getBitmap();
+                            Palette palette = PaletteManager.loadPalette(mSummary, bitmap);
+                            if (palette != null) {
+                                mCallback.onPaletteLoaded(new PaletteLoadedEvent(mSummary.getId(), palette));
+                            }
+                            if (mCallback.shouldShowBigPoster()) {
+                                mPoster.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        mBigPosterContainer.setVisibility(View.VISIBLE);
+                                        mPoster.setVisibility(View.GONE);
+                                    }
+                                });
+                                mBigPoster.setImageBitmap(bitmap);
+                                mBigPoster.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        hideBigPoster();
 
+                                    }
+                                });
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onError() {
+
+                    }
+                });
     }
 
     private void hideCast(){
@@ -325,46 +337,6 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
         }
     }
 
-    @Override
-    public void update(UpdateEvent e, Object... data) {
-        switch(e){
-            case POSTER_LOADED:
-                if(((RottenTomatoesSummary) data[0]).getId().equals(mSummary.getId())){
-                    mPoster.setImageBitmap((Bitmap) data[1]);
-                    if(mCallback.shouldShowBigPoster()) {
-                        mPoster.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                mBigPosterContainer.setVisibility(View.VISIBLE);
-                                mPoster.setVisibility(View.GONE);
-                            }
-                        });
-                        mBigPoster.setImageBitmap((Bitmap) data[1]);
-                        mBigPoster.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                hideBigPoster();
-
-                            }
-                        });
-                    }
-                    PaletteManager.getInstance().loadPalette((RottenTomatoesSummary) data[0], (Bitmap) data[1]);
-                }
-                break;
-            case POSTER_FAILED_TO_LOAD:
-                if(((RottenTomatoesSummary) data[0]).getId().equals(mSummary.getId())){
-                }
-                break;
-            case PALETTE_LOADED:
-                if(((RottenTomatoesSummary) data[0]).getId().equals(mSummary.getId())){
-                    mCallback.presentPalette((Palette) data[1]);
-                }
-                break;
-        }
-    }
-
-
-
     /**
      * Hides the big poster from the screen
      * @return true if this caused a change in layout, false otherwise
@@ -377,6 +349,4 @@ public class DisplayFragment extends ActionBarFragment implements UpdateListener
         }
         return false;
     }
-
-
 }

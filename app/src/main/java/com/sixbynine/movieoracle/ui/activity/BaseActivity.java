@@ -1,44 +1,22 @@
 package com.sixbynine.movieoracle.ui.activity;
 
-import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.view.ViewCompat;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.widget.Toolbar;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.util.TypedValue;
 import android.view.View;
 
-import com.crittercism.app.Crittercism;
 import com.flurry.android.FlurryAgent;
+import com.sixbynine.movieoracle.MyApplication;
+import com.sixbynine.movieoracle.Subscribes;
 import com.sixbynine.movieoracle.util.Keys;
 
-/**
- * Created by steviekideckel on 11/2/14.
- */
-public abstract class BaseActivity extends ActionBarActivity{
-
-    private Toolbar mToolbar;
-
-    @Override
-    public void setContentView(int layoutResID) {
-        super.setContentView(layoutResID);
-        //mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        //ViewCompat.setElevation(mToolbar, getResources().getDimensionPixelOffset(R.dimen.toolbar_elevation));
-        //setSupportActionBar(mToolbar);
-
-    }
-
-    protected Toolbar getToolbar(){
-        return mToolbar;
-    }
+public abstract class BaseActivity extends AppCompatActivity {
 
     protected void setElevation(View view, int dip){
-        ViewCompat.setElevation(view, TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, getResources().getDisplayMetrics()));
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Crittercism.initialize(getApplicationContext(), "5471a99308ebc1199c000002");
+        ViewCompat.setElevation(view,
+                TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, getResources().getDisplayMetrics()));
     }
 
     @Override
@@ -48,8 +26,34 @@ public abstract class BaseActivity extends ActionBarActivity{
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (this.getClass().getAnnotation(Subscribes.class) != null) {
+            MyApplication.getInstance().getBus().register(this);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (this.getClass().getAnnotation(Subscribes.class) != null) {
+            MyApplication.getInstance().getBus().unregister(this);
+        }
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
         FlurryAgent.onEndSession(this);
+    }
+
+    @NonNull
+    @Override
+    public ActionBar getSupportActionBar() {
+        ActionBar actionBar = super.getSupportActionBar();
+        if (actionBar == null) {
+            throw new NullPointerException();
+        }
+        return actionBar;
     }
 }

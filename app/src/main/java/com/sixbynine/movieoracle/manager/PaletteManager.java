@@ -3,39 +3,29 @@ package com.sixbynine.movieoracle.manager;
 import android.graphics.Bitmap;
 import android.support.v7.graphics.Palette;
 
-import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
+import com.sixbynine.movieoracle.MyApplication;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryMovieSummary;
+import com.sixbynine.movieoracle.events.PaletteLoadedEvent;
 
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by steviekideckel on 11/19/14.
- */
-public class PaletteManager extends Manager{
+public final class PaletteManager {
 
-    private static PaletteManager instance = new PaletteManager();
-    private Map<String, Palette> mPalettes;
+    private static Map<String, Palette> palettes = new HashMap<>();
 
-    public static PaletteManager getInstance(){
-        return instance;
-    }
-
-    private PaletteManager(){
-        mPalettes = new HashMap<>();
-    }
-
-    public void loadPalette(final RottenTomatoesSummary summary, Bitmap bmp){
-        if(mPalettes.get(summary.getId()) != null){
-            publish(UpdateEvent.PALETTE_LOADED, summary, mPalettes.get(summary.getId()));
-        }else{
-            Palette.generateAsync(bmp,
-                    new Palette.PaletteAsyncListener() {
-                        @Override public void onGenerated(Palette palette) {
-                            mPalettes.put(summary.getId(), palette);
-                            publish(UpdateEvent.PALETTE_LOADED, summary, palette);
-                        }
-                    });
+    public static Palette loadPalette(RTMovieQueryMovieSummary summary, Bitmap bmp){
+        final String id = summary.getId();
+        Palette palette = palettes.get(id);
+        if(palette == null){
+            Palette.from(bmp).generate(new Palette.PaletteAsyncListener() {
+                @Override
+                public void onGenerated(Palette palette) {
+                    palettes.put(id, palette);
+                    MyApplication.getInstance().getBus().post(new PaletteLoadedEvent(id, palette));
+                }
+            });
         }
+        return palette;
     }
-
 }

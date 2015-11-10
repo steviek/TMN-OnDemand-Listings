@@ -4,21 +4,45 @@ import android.app.Application;
 import android.content.Intent;
 import android.net.Uri;
 
-/**
- * Created by steviekideckel on 10/23/14.
- */
-public class MyApplication extends Application{
+import com.crittercism.app.Crittercism;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.squareup.otto.Bus;
+
+public final class MyApplication extends Application{
 
     private static MyApplication sInstance;
+
+    private Bus mBus;
+    private ObjectMapper mObjectMapper;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        Crittercism.initialize(getApplicationContext(), "5471a99308ebc1199c000002");
         sInstance = this;
+        mBus = new Bus();
+        mObjectMapper = new ObjectMapper();
     }
 
     public static MyApplication getInstance(){
         return sInstance;
+    }
+
+    public Bus getBus() {
+        return mBus;
+    }
+
+    public ObjectMapper getObjectMapper() {
+        return mObjectMapper;
+    }
+
+    public String writeValueAsSring(Object object) {
+        try {
+            return mObjectMapper.writeValueAsString(object);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     public static Intent getStoreIntent(){
