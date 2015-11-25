@@ -3,8 +3,8 @@ package com.sixbynine.movieoracle.home;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -20,12 +20,18 @@ import android.widget.TextView;
 
 import com.sixbynine.movieoracle.R;
 import com.sixbynine.movieoracle.Subscribes;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.RTMovieQueryMovieSummaryWithTitle;
 import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryCastMember;
 import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryMovieSummary;
 import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryRatings;
 import com.sixbynine.movieoracle.events.PaletteLoadedEvent;
+import com.sixbynine.movieoracle.manager.DataManager;
 import com.sixbynine.movieoracle.manager.PaletteManager;
+import com.sixbynine.movieoracle.util.Logger;
+import com.sixbynine.movieoracle.util.RottenTomatoesUtilities;
 import com.squareup.picasso.Picasso;
+
+import java.io.IOException;
 
 @Subscribes
 public class DisplayFragment extends Fragment {
@@ -57,6 +63,7 @@ public class DisplayFragment extends Fragment {
     private ViewGroup mBigPosterContainer;
     private ImageView mBigPoster;
 
+    private RTMovieQueryMovieSummaryWithTitle mSummaryWithTitle;
     private RTMovieQueryMovieSummary mSummary;
     private Callback mCallback;
 
@@ -71,7 +78,7 @@ public class DisplayFragment extends Fragment {
         @Override
         public void onClick(View v) {
             if(v == mRatingsContainer || v == mRtText){
-                String url = mSummary.getLinks().getAlternative();
+                String url = mSummary.getLinks().getAlternate();
                 Intent i = new Intent(Intent.ACTION_VIEW);
                 i.setData(Uri.parse(url));
                 startActivity(i);
@@ -102,10 +109,19 @@ public class DisplayFragment extends Fragment {
         }
     }
 
-    public static DisplayFragment newInstance(RTMovieQueryMovieSummary summary){
+    public static DisplayFragment newInstance(RTMovieQueryMovieSummaryWithTitle summary){
         DisplayFragment frag = new DisplayFragment();
-        frag.mSummary = summary;
+        Bundle args = new Bundle();
+        args.putString("title", summary.getTitle());
+        frag.setArguments(args);
         return frag;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mSummaryWithTitle = DataManager.getMovieQueryResultMap().getSummary(getArguments().getString("title"));
+        mSummary = mSummaryWithTitle.getSummary();
     }
 
     @Override
@@ -153,12 +169,13 @@ public class DisplayFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        setSummary(mSummary);
+        setSummary(mSummaryWithTitle);
     }
 
-    public void setSummary(RTMovieQueryMovieSummary summary) {
-        mSummary = summary;
-        mTitle.setText(mSummary.getTitle());
+    public void setSummary(RTMovieQueryMovieSummaryWithTitle summaryWithTitle) {
+        mSummaryWithTitle = summaryWithTitle;
+        mSummary = summaryWithTitle.getSummary();
+        mTitle.setText(mSummaryWithTitle.getTitle());
         mTitle.setSelected(true);
 
         if (mSummary.getRuntime() > 0) {
@@ -168,7 +185,7 @@ public class DisplayFragment extends Fragment {
         }
 
         if (mSummary.getYear() > 0) {
-            mYear.setText(mSummary.getYear());
+            mYear.setText(String.valueOf(mSummary.getYear()));
         } else {
             mYear.setVisibility(View.INVISIBLE);
         }
@@ -239,7 +256,7 @@ public class DisplayFragment extends Fragment {
         }
 
         setLinks(mSummary.getAltIds() != null && mSummary.getAltIds().getImdbId() != null,
-                mSummary.getLinks() != null && mSummary.getLinks().getAlternative() != null);
+                mSummary.getLinks() != null && mSummary.getLinks().getAlternate() != null);
 
         if(isResumed()){
             mPoster.setImageResource(0);
@@ -248,42 +265,46 @@ public class DisplayFragment extends Fragment {
     }
 
     private void getPoster() {
-        Picasso.with(getContext())
-                .load(mSummary.getPosters().getDetailed())
-                .into(mPoster, new com.squareup.picasso.Callback() {
-                    @Override
-                    public void onSuccess() {
-                        if (getContext() != null) {
-                            Bitmap bitmap = ((BitmapDrawable) mPoster.getDrawable()).getBitmap();
-                            Palette palette = PaletteManager.loadPalette(mSummary, bitmap);
-                            if (palette != null) {
-                                mCallback.onPaletteLoaded(new PaletteLoadedEvent(mSummary.getId(), palette));
-                            }
-                            if (mCallback.shouldShowBigPoster()) {
-                                mPoster.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        mBigPosterContainer.setVisibility(View.VISIBLE);
-                                        mPoster.setVisibility(View.GONE);
-                                    }
-                                });
-                                mBigPoster.setImageBitmap(bitmap);
-                                mBigPoster.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        hideBigPoster();
+        new AsyncTask<Void, Void, Bitmap>() {
+            @Override
+            protected Bitmap doInBackground(Void... params) {
+                try {
+                    String url = RottenTomatoesUtilities.getPosterUrl(mSummary.getPosters());
+                    return Picasso.with(getContext())
+                            .load(url)
+                            .get();
+                } catch (IOException e) {
+                    Logger.e(e.toString());
+                    return null;
+                }
+            }
 
-                                    }
-                                });
-                            }
+            @Override
+            protected void onPostExecute(Bitmap bitmap) {
+                mPoster.setImageBitmap(bitmap);
+                Palette palette = PaletteManager.loadPalette(mSummary, bitmap);
+                if (palette != null) {
+                    mCallback.onPaletteLoaded(new PaletteLoadedEvent(mSummary.getId(), palette));
+                }
+                if (mCallback.shouldShowBigPoster()) {
+                    mBigPoster.setImageBitmap(bitmap);
+                    mPoster.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            mBigPosterContainer.setVisibility(View.VISIBLE);
+                            mPoster.setVisibility(View.GONE);
                         }
-                    }
+                    });
+                    mBigPoster.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            hideBigPoster();
 
-                    @Override
-                    public void onError() {
-
-                    }
-                });
+                        }
+                    });
+                }
+            }
+        }.execute();
     }
 
     private void hideCast(){

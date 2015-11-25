@@ -1,8 +1,10 @@
 package com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class RTMovieQueryRatings {
 
     private final String criticsRating;

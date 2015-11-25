@@ -1,10 +1,16 @@
 package com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.RTMovieQueryMovieSummaryWithTitle;
+import com.sixbynine.movieoracle.model.Filter;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class RTMovieQueryMovieSummary {
 
     private final String id;
@@ -94,5 +100,31 @@ public final class RTMovieQueryMovieSummary {
 
     public RTMovieQueryLinks getLinks() {
         return links;
+    }
+
+    public static List<String> getAllChoices(List<RTMovieQueryMovieSummaryWithTitle> summaries, Filter filter) {
+        List<String> choices = new ArrayList<>();
+        switch (filter.getType()) {
+            case ACTOR:
+                for (RTMovieQueryMovieSummaryWithTitle summary : summaries) {
+                    if (summary.getSummary().cast != null) {
+                        int len2 = summary.getSummary().cast.size();
+                        for (int j = 0; j < len2; j++) {
+                            RTMovieQueryCastMember actorBrief = summary.getSummary().cast.get(j);
+                            if (!choices.contains(actorBrief.getName())) {
+                                choices.add(actorBrief.getName());
+                            }
+                        }
+                    }
+                }
+                Collections.sort(choices);
+                choices.add(0, Filter.SELECT_ACTOR);
+                break;
+            case RATING:
+                choices.add(Filter.RATING_ALL);
+                choices.add(Filter.RATING_FRESH);
+                break;
+        }
+        return choices;
     }
 }

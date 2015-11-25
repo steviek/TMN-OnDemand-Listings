@@ -5,13 +5,7 @@
     android:layout_height="wrap_content"
     android:background="?attr/colorPrimary"
     android:minHeight="?attr/actionBarSize"
-    android:orientation="vertical"
->
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0.5dp"
-        android:background="#000000"/>
+    android:orientation="vertical">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -52,7 +46,6 @@
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
                 android:visibility="invisible" />
-
 
         </LinearLayout>
 
@@ -101,13 +94,11 @@
 
         </LinearLayout>
 
-
     </RelativeLayout>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="0.5dp"
         android:background="#888888"/>
-
 
 </LinearLayout>

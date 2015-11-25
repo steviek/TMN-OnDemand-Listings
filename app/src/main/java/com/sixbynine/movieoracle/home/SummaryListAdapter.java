@@ -8,12 +8,12 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import com.sixbynine.movieoracle.R;
-import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryMovieSummary;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.RTMovieQueryMovieSummaryWithTitle;
 import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryRatings;
 
 import java.util.ArrayList;
 
-public class SummaryListAdapter extends ArrayAdapter<RTMovieQueryMovieSummary> {
+public class SummaryListAdapter extends ArrayAdapter<RTMovieQueryMovieSummaryWithTitle> {
 
     public static class ViewHolder{
         public TextView mTitle;
@@ -31,7 +31,7 @@ public class SummaryListAdapter extends ArrayAdapter<RTMovieQueryMovieSummary> {
         }
     }
 
-    public SummaryListAdapter(Context context, ArrayList<RTMovieQueryMovieSummary> summaries){
+    public SummaryListAdapter(Context context, ArrayList<RTMovieQueryMovieSummaryWithTitle> summaries){
         super(context, R.layout.row_movie_new, summaries);
     }
 
@@ -50,10 +50,10 @@ public class SummaryListAdapter extends ArrayAdapter<RTMovieQueryMovieSummary> {
     }
 
     public void bindView(ViewHolder viewHolder, int position) {
-        RTMovieQueryMovieSummary summary = getItem(position);
+        RTMovieQueryMovieSummaryWithTitle summary = getItem(position);
         viewHolder.mTitle.setText(summary.getTitle());
 
-        RTMovieQueryRatings ratings = summary.getRatings();
+        RTMovieQueryRatings ratings = summary.getSummary().getRatings();
 
         int criticsScore = ratings.getCriticsScore();
         if(criticsScore >= 60){

@@ -1,12 +1,14 @@
 package com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class RTMovieQueryLinks {
 
     private final String self;
-    private final String alternative;
+    private final String alternate;
     private final String cast;
     private final String clips;
     private final String reviews;
@@ -15,13 +17,13 @@ public final class RTMovieQueryLinks {
     @JsonCreator
     public RTMovieQueryLinks(
             @JsonProperty("self") String self,
-            @JsonProperty("alternative") String alternative,
+            @JsonProperty("alternate") String alternate,
             @JsonProperty("cast") String cast,
             @JsonProperty("clips") String clips,
             @JsonProperty("reviews") String reviews,
             @JsonProperty("similar") String similar) {
         this.self = self;
-        this.alternative = alternative;
+        this.alternate = alternate;
         this.cast = cast;
         this.clips = clips;
         this.reviews = reviews;
@@ -32,8 +34,8 @@ public final class RTMovieQueryLinks {
         return self;
     }
 
-    public String getAlternative() {
-        return alternative;
+    public String getAlternate() {
+        return alternate;
     }
 
     public String getCast() {

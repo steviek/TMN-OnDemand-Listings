@@ -1,41 +1,42 @@
 package com.sixbynine.movieoracle.manager;
 
-import android.os.AsyncTask;
+import com.google.common.base.Optional;
 
 import com.sixbynine.movieoracle.MyApplication;
 import com.sixbynine.movieoracle.datamodel.webresources.WebResources;
 import com.sixbynine.movieoracle.datamodel.webresources.WebResourcesService;
 import com.sixbynine.movieoracle.events.WebResourcesLoadedEvent;
 
+import retrofit.Callback;
+import retrofit.JacksonConverterFactory;
+import retrofit.Response;
 import retrofit.Retrofit;
 
 public final class WebResourcesManager {
 
     private static WebResources webResources;
 
-    public static WebResources getWebResources() {
+    public static Optional<WebResources> getWebResources() {
         if (webResources == null) {
-            new LoadWebResourcesTask().execute();
-        }
-        return webResources;
-    }
-
-    private static final class LoadWebResourcesTask extends AsyncTask<Void, Void, WebResources> {
-
-        @Override
-        protected WebResources doInBackground(Void... params) {
-            return new Retrofit.Builder()
-                    .baseUrl("https://raw.githubusercontent.com/steviek/TMN-OnDemand-Listings/" +
-                            "master/app/src/main/assets")
+            new Retrofit.Builder()
+                    .baseUrl("https://raw.githubusercontent.com")
+                    .addConverterFactory(JacksonConverterFactory.create(MyApplication.getInstance().getObjectMapper()))
                     .build()
                     .create(WebResourcesService.class)
-                    .getWebResources();
-        }
+                    .getWebResources()
+                    .enqueue(new Callback<WebResources>() {
+                        @Override
+                        public void onResponse(Response<WebResources> response, Retrofit retrofit) {
+                            webResources = response.body();
+                            MyApplication.getInstance().getBus().post(new WebResourcesLoadedEvent(webResources));
+                        }
 
-        @Override
-        protected void onPostExecute(WebResources webResources) {
-            WebResourcesManager.webResources = webResources;
-            MyApplication.getInstance().getBus().post(new WebResourcesLoadedEvent(webResources));
+                        @Override
+                        public void onFailure(Throwable throwable) {
+
+                        }
+                    });
         }
+        return Optional.fromNullable(webResources);
     }
 }

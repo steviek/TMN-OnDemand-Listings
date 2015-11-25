@@ -6,6 +6,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.sixbynine.movieoracle.events.RTMovieQueryResultLoadedEvent;
+import com.sixbynine.movieoracle.events.RTMovieQueryResultMapLoadedEvent;
 import com.sixbynine.movieoracle.events.TMNResourcesLoadedEvent;
 import com.sixbynine.movieoracle.home.HomeActivity;
 import com.sixbynine.movieoracle.manager.DataManager;
@@ -65,5 +66,10 @@ public final class SplashActivity extends BaseActivity {
     public void onRTMovieQueryResultLoaded(RTMovieQueryResultLoadedEvent event) {
         mProgressNumberTextView.setText(event.getIndex() + "/" + event.getTotal());
         mProgressTextView.setText(getString(R.string.loaded, event.getTitle()));
+    }
+
+    @Subscribe
+    public void onRTMovieQueryResultMapLoaded(RTMovieQueryResultMapLoadedEvent event) {
+        startHomeActivity();
     }
 }

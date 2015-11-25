@@ -15,10 +15,10 @@ import android.widget.TextView;
 
 import com.sixbynine.movieoracle.BaseFragment;
 import com.sixbynine.movieoracle.R;
-import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryMovieSummary;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.RTMovieQueryMovieSummaryWithTitle;
+import com.sixbynine.movieoracle.manager.DataManager;
 import com.sixbynine.movieoracle.model.Filter;
 import com.sixbynine.movieoracle.model.Sorting;
-import com.sixbynine.movieoracle.util.Prefs;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,15 +28,15 @@ public class SummaryListFragment extends BaseFragment {
     private SummaryListAdapter mAdapter;
     private TextView mNoResultsTextView;
 
-    private List<RTMovieQueryMovieSummary> mAllSummaries;
+    private List<RTMovieQueryMovieSummaryWithTitle> mAllSummaries;
     private Callback mCallback;
 
     private int mIndex;
 
     public interface Callback {
-        void onItemSelected(int index, RTMovieQueryMovieSummary item);
+        void onItemSelected(RTMovieQueryMovieSummaryWithTitle item);
 
-        void onItemMovedToTop(int index, RTMovieQueryMovieSummary item);
+        void onItemMovedToTop(RTMovieQueryMovieSummaryWithTitle item);
     }
 
     public static SummaryListFragment newInstance(int index) {
@@ -60,7 +60,7 @@ public class SummaryListFragment extends BaseFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mAllSummaries = Prefs.getCurrentBestSummaries();
+        mAllSummaries = DataManager.getMovieQueryResultMap().getBestSummaries();
         if (savedInstanceState == null) {
             mIndex = getArguments().getInt("index");
             if (mIndex == -1) {
@@ -85,12 +85,12 @@ public class SummaryListFragment extends BaseFragment {
 
         mNoResultsTextView = (TextView) view.findViewById(R.id.no_results_view);
 
-        mAdapter = new SummaryListAdapter(getActivity(), new ArrayList<RTMovieQueryMovieSummary>());
+        mAdapter = new SummaryListAdapter(getActivity(), new ArrayList<RTMovieQueryMovieSummaryWithTitle>());
         listView.setAdapter(mAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (mCallback != null) mCallback.onItemSelected(position, mAdapter.getItem(position));
+                if (mCallback != null) mCallback.onItemSelected(mAdapter.getItem(position));
             }
         });
         listView.setOnScrollListener(new AbsListView.OnScrollListener() {
@@ -105,7 +105,7 @@ public class SummaryListFragment extends BaseFragment {
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
                 if (firstVisibleItem != lastFirstVisibleItem && !mAdapter.isEmpty()) {
                     lastFirstVisibleItem = firstVisibleItem;
-                    mCallback.onItemMovedToTop(firstVisibleItem, mAdapter.getItem(firstVisibleItem));
+                    mCallback.onItemMovedToTop(mAdapter.getItem(firstVisibleItem));
                 }
                 mIndex = firstVisibleItem;
             }

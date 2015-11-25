@@ -10,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,20 +21,18 @@ import android.view.animation.AccelerateInterpolator;
 import com.sixbynine.movieoracle.AboutFragment;
 import com.sixbynine.movieoracle.MyApplication;
 import com.sixbynine.movieoracle.R;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.RTMovieQueryMovieSummaryWithTitle;
 import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryCastMember;
-import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryMovieSummary;
 import com.sixbynine.movieoracle.display.DisplayActivity;
 import com.sixbynine.movieoracle.events.PaletteLoadedEvent;
-import com.sixbynine.movieoracle.model.ActorFilter;
+import com.sixbynine.movieoracle.manager.DataManager;
 import com.sixbynine.movieoracle.model.Filter;
+import com.sixbynine.movieoracle.model.Filters;
 import com.sixbynine.movieoracle.model.Sorting;
-import com.sixbynine.movieoracle.model.TitleFilter;
 import com.sixbynine.movieoracle.ui.activity.BaseActivity;
-import com.sixbynine.movieoracle.util.Prefs;
 import com.sixbynine.movieoracle.util.ViewHelper;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 
@@ -41,7 +40,7 @@ public final class HomeActivity extends BaseActivity implements SummaryListFragm
         DisplayFragment.Callback, FilterFragment.Callback {
 
     public static final int CHOOSE_ACTOR = 0;
-    private List<RTMovieQueryMovieSummary> mSummaries;
+    private List<RTMovieQueryMovieSummaryWithTitle> mSummaries;
     private SummaryListFragment mSummaryListFragment;
     private DisplayFragment mDisplayFragment;
     private FilterFragment mFilterFragment;
@@ -63,8 +62,7 @@ public final class HomeActivity extends BaseActivity implements SummaryListFragm
 
         @Override
         public boolean onQueryTextChange(String s) {
-            Filter filter = new TitleFilter(s);
-            mFilterFragment.setFilter(filter);
+            Filter filter = Filters.create(Filter.Type.TITLE, s);
             mSummaryListFragment.sortAndFilter(mSort, filter);
             return false;
         }
@@ -74,10 +72,12 @@ public final class HomeActivity extends BaseActivity implements SummaryListFragm
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
         getSupportActionBar().setTitle(R.string.movies_this_week);
 
         int index = -1;
-        mSummaries = Prefs.getCurrentBestSummaries();
+        mSummaries = DataManager.getMovieQueryResultMap().getBestSummaries();
         if (savedInstanceState == null) {
             mFilterShowing = false;
         } else {
@@ -87,7 +87,7 @@ public final class HomeActivity extends BaseActivity implements SummaryListFragm
 
         mMultiPane = findViewById(R.id.secondary_content) != null;
 
-        Collections.sort(mSummaries, mAlphabeticalComparator);
+        Collections.sort(mSummaries, Sorting.ALPHABETICAL);
         mSummaryListFragment = SummaryListFragment.newInstance(index);
         getSupportFragmentManager().beginTransaction().replace(R.id.content, mSummaryListFragment).commit();
 
@@ -107,8 +107,6 @@ public final class HomeActivity extends BaseActivity implements SummaryListFragm
                 mFilterContainer.setVisibility(mFilterShowing ? View.VISIBLE : View.GONE);
             }
         });
-        setElevation(mFilterContainer, 2);
-
     }
 
     @Override
@@ -120,33 +118,26 @@ public final class HomeActivity extends BaseActivity implements SummaryListFragm
         }
     }
 
-    private Comparator<RTMovieQueryMovieSummary> mAlphabeticalComparator = new Comparator<RTMovieQueryMovieSummary>() {
-        @Override
-        public int compare(RTMovieQueryMovieSummary lhs, RTMovieQueryMovieSummary rhs) {
-            return lhs.getTitle().compareTo(rhs.getTitle());
-        }
-    };
-
     @Override
-    public void onItemSelected(int index, RTMovieQueryMovieSummary item) {
+    public void onItemSelected(RTMovieQueryMovieSummaryWithTitle item) {
         if (mMultiPane) {
-            setDisplayedItem(index, item);
+            setDisplayedItem(item);
         } else {
             Intent intent = new Intent(this, DisplayActivity.class);
-            intent.putExtra("summary", MyApplication.getInstance().writeValueAsSring(item));
+            intent.putExtra("title", item.getTitle());
             startActivityForResult(intent, CHOOSE_ACTOR);
         }
 
     }
 
     @Override
-    public void onItemMovedToTop(int index, RTMovieQueryMovieSummary item) {
+    public void onItemMovedToTop(RTMovieQueryMovieSummaryWithTitle item) {
         if (mMultiPane) {
-            setDisplayedItem(index, item);
+            setDisplayedItem(item);
         }
     }
 
-    private void setDisplayedItem(int index, RTMovieQueryMovieSummary item) {
+    private void setDisplayedItem(RTMovieQueryMovieSummaryWithTitle item) {
         if (mMultiPane) {
             if (mDisplayFragment == null || !mDisplayFragment.isAdded()) {
                 mDisplayFragment = DisplayFragment.newInstance(item);
@@ -219,7 +210,7 @@ public final class HomeActivity extends BaseActivity implements SummaryListFragm
     public void applyFilterAndSort(Filter filter, Sorting sort) {
         mFilter = filter;
         mSort = sort;
-        if (filter instanceof TitleFilter) {
+        if (filter.getType() == Filter.Type.ACTOR) {
             mSearchView.setIconified(false);
         } else {
             mSummaryListFragment.sortAndFilter(sort, filter);
@@ -227,7 +218,7 @@ public final class HomeActivity extends BaseActivity implements SummaryListFragm
     }
 
     @Override
-    public List<RTMovieQueryMovieSummary> getSummaries() {
+    public List<RTMovieQueryMovieSummaryWithTitle> getSummaries() {
         return mSummaries;
     }
 
@@ -308,10 +299,10 @@ public final class HomeActivity extends BaseActivity implements SummaryListFragm
         if (requestCode == CHOOSE_ACTOR && resultCode == RESULT_OK) {
             String actor = data.getStringExtra("actor");
             if (actor != null) {
-                mFilter = new ActorFilter(actor);
+                mFilter = Filters.create(Filter.Type.ACTOR, actor);
                 mSort = Sorting.ALPHABETICAL;
                 mSummaryListFragment.sortAndFilter(mSort, mFilter);
-                mFilterFragment = FilterFragment.newInstance(mFilter, mSort);
+                mFilterFragment = FilterFragment.newInstance(Filter.Type.ACTOR, actor, mSort);
                 getSupportFragmentManager().beginTransaction().replace(R.id.filter_container, mFilterFragment).commitAllowingStateLoss();
                 showFilter();
             }

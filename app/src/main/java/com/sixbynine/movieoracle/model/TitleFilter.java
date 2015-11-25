@@ -2,13 +2,13 @@ package com.sixbynine.movieoracle.model;
 
 import android.os.Parcel;
 
-import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryMovieSummary;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.RTMovieQueryMovieSummaryWithTitle;
 
-public final class TitleFilter implements Filter {
+final class TitleFilter implements Filter {
 
     private String title;
 
-    public TitleFilter(String title) {
+    TitleFilter(String title) {
         this.title = title;
     }
 
@@ -23,6 +23,11 @@ public final class TitleFilter implements Filter {
     }
 
     @Override
+    public Type getType() {
+        return Type.TITLE;
+    }
+
+    @Override
     public int describeContents() {
         return 0;
     }
@@ -33,7 +38,7 @@ public final class TitleFilter implements Filter {
     }
 
     @Override
-    public boolean apply(RTMovieQueryMovieSummary summary) {
+    public boolean apply(RTMovieQueryMovieSummaryWithTitle summary) {
         return title == null || summary.getTitle().toUpperCase().contains(title.toUpperCase());
     }
 

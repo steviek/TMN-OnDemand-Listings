@@ -14,10 +14,10 @@ public final class PaletteManager {
 
     private static Map<String, Palette> palettes = new HashMap<>();
 
-    public static Palette loadPalette(RTMovieQueryMovieSummary summary, Bitmap bmp){
+    public static Palette loadPalette(RTMovieQueryMovieSummary summary, Bitmap bmp) {
         final String id = summary.getId();
         Palette palette = palettes.get(id);
-        if(palette == null){
+        if (palette == null && bmp != null) {
             Palette.from(bmp).generate(new Palette.PaletteAsyncListener() {
                 @Override
                 public void onGenerated(Palette palette) {

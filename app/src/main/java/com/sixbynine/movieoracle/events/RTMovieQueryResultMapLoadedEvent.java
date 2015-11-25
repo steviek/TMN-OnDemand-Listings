@@ -1,18 +1,16 @@
 package com.sixbynine.movieoracle.events;
 
-import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryResult;
-
-import java.util.Map;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.RTMovieQueryResultMap;
 
 public final class RTMovieQueryResultMapLoadedEvent {
 
-    private final Map<String, RTMovieQueryResult> queryResultMap;
+    private final RTMovieQueryResultMap queryResultMap;
 
-    public RTMovieQueryResultMapLoadedEvent(Map<String, RTMovieQueryResult> queryResultMap) {
+    public RTMovieQueryResultMapLoadedEvent(RTMovieQueryResultMap queryResultMap) {
         this.queryResultMap = queryResultMap;
     }
 
-    public Map<String, RTMovieQueryResult> getQueryResultMap() {
+    public RTMovieQueryResultMap getQueryResultMap() {
         return queryResultMap;
     }
 }

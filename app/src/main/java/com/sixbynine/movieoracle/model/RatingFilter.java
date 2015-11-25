@@ -2,13 +2,26 @@ package com.sixbynine.movieoracle.model;
 
 import android.os.Parcel;
 
-import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryMovieSummary;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.RTMovieQueryMovieSummaryWithTitle;
 
-public final class RatingFilter implements Filter {
+final class RatingFilter implements Filter {
 
     private final int rating;
 
-    public RatingFilter(int rating) {
+    RatingFilter(String ratingType) {
+        switch (ratingType) {
+            case Filter.RATING_ALL:
+                this.rating = 0;
+                break;
+            case Filter.RATING_FRESH:
+                this.rating = 60;
+                break;
+            default:
+                throw new IllegalArgumentException("Unexpected rating type: " + ratingType);
+        }
+    }
+
+    private RatingFilter(int rating) {
         this.rating = rating;
     }
 
@@ -23,8 +36,13 @@ public final class RatingFilter implements Filter {
     }
 
     @Override
-    public boolean apply(RTMovieQueryMovieSummary rtMovieQueryMovieSummary) {
-        return false;
+    public Type getType() {
+        return Type.RATING;
+    }
+
+    @Override
+    public boolean apply(RTMovieQueryMovieSummaryWithTitle rtMovieQueryMovieSummary) {
+        return rtMovieQueryMovieSummary.getSummary().getRatings().getAverage() >= rating;
     }
 
     @Override

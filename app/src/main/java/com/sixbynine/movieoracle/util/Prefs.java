@@ -1,22 +1,16 @@
 package com.sixbynine.movieoracle.util;
 
-import android.content.Context;
+import com.google.common.base.Optional;
+
 import android.content.SharedPreferences;
-import android.os.Build;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sixbynine.movieoracle.MyApplication;
-import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryMovieSummary;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.RTMovieQueryResultMap;
 import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryResult;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class Prefs {
@@ -27,7 +21,7 @@ public class Prefs {
 	private static void init(){
         if(prefs == null && MyApplication.getInstance() != null) {
             objectMapper = MyApplication.getInstance().getObjectMapper();
-            prefs = MyApplication.getInstance().getSharedPreferences("movieoracle", Context.MODE_MULTI_PROCESS);
+            prefs = MyApplication.getInstance().getSharedPreferences("movieoracle", 0);
         }
 	}
 	
@@ -44,19 +38,7 @@ public class Prefs {
 
     public static void putStringSet(String key, Set<String> stringSet){
         init();
-        if(Build.VERSION.SDK_INT >= 11){
-            prefs.edit().putStringSet(key, stringSet).apply();
-        }else{
-            StringBuilder saveString = new StringBuilder("");
-            if(stringSet.size() > 0) {
-                Iterator<String> iter = stringSet.iterator();
-                saveString.append(iter.next());
-                while (iter.hasNext()) {
-                    saveString.append(";;;").append(iter.next());
-                }
-            }
-            prefs.edit().putString(key, saveString.toString()).apply();
-        }
+        prefs.edit().putStringSet(key, stringSet).apply();
     }
 
     public static Set<String> getStringSet(String key){
@@ -65,19 +47,7 @@ public class Prefs {
 
     public static Set<String> getStringSet(String key, Set<String> fallback){
         init();
-        if(Build.VERSION.SDK_INT >= 11){
-            return prefs.getStringSet(key, fallback);
-        }else{
-            String rawString = prefs.getString(key, "");
-            if(rawString.isEmpty()){
-                return fallback;
-            }else{
-                String[] parts = rawString.split(";;;");
-                Set<String> returnVal = new HashSet<>(parts.length);
-                Collections.addAll(returnVal, parts);
-                return returnVal;
-            }
-        }
+        return prefs.getStringSet(key, fallback);
     }
 
     public static void addTitleToIgnoreList(String title){
@@ -89,54 +59,37 @@ public class Prefs {
         }
     }
 
-    public static void saveIgnoreList(Set<String> list){
-        init();
-        if(prefs != null){
-            putStringSet(Keys.IGNORE_LIST, list);
-        }
-    }
-
     public static Set<String> getIgnoreList(){
         init();
-        if(prefs != null){
-            return getStringSet(Keys.IGNORE_LIST);
-        }
-        return new HashSet<>();
+        return getStringSet(Keys.IGNORE_LIST);
     }
 
-    public static void putCurrentResults(Map<String, RTMovieQueryResult> queryResultMap) {
-        init();
-        for (Map.Entry<String, RTMovieQueryResult> entry : queryResultMap.entrySet()) {
-            putSummary(entry.getKey(), entry.getValue());
-        }
-        putStringSet("rt-movies", queryResultMap.keySet());
-    }
-
-    public static Map<String, RTMovieQueryResult> getCurrentResults() {
+    public static RTMovieQueryResultMap getCurrentResults() {
         init();
         Set<String> movies = getStringSet("rt-movies");
-        Map<String, RTMovieQueryResult> queryResultMap = new HashMap<>();
+        RTMovieQueryResultMap queryResultMap = new RTMovieQueryResultMap();
         for (String movie : movies) {
-            queryResultMap.put(movie, getSummary(movie));
+            Optional<RTMovieQueryResult> queryResult = getSummary(movie);
+            if (queryResult.isPresent()) {
+                queryResultMap.put(movie, queryResult.get());
+            }
         }
         return queryResultMap;
     }
 
-    public static List<RTMovieQueryMovieSummary> getCurrentBestSummaries() {
-        Map<String, RTMovieQueryResult> queryResultMap = getCurrentResults();
-        List<RTMovieQueryMovieSummary> summaries = new ArrayList<>();
-        for (Map.Entry<String, RTMovieQueryResult> entry : queryResultMap.entrySet()) {
-            summaries.add(entry.getValue().getBestMatch(entry.getKey()));
-        }
-        return summaries;
-    }
-
-    public static RTMovieQueryResult getSummary(String title) {
+    public static Optional<RTMovieQueryResult> getSummary(String title) {
         init();
-        try {
-            return objectMapper.readValue(prefs.getString("rt-movie-" + title, null), RTMovieQueryResult.class);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
+        String serialized = prefs.getString("rt-movie-" + title, null);
+        if (serialized == null) {
+            return Optional.absent();
+        } else {
+            try {
+                return Optional.of(objectMapper.readValue(
+                        prefs.getString("rt-movie-" + title, null),
+                        RTMovieQueryResult.class));
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
         }
     }
 
@@ -145,12 +98,21 @@ public class Prefs {
         prefs.edit().putString("rt-movie-" + title, MyApplication.getInstance().writeValueAsSring(queryResult)).apply();
     }
 
+    public static void putCurrentTitles(Set<String> titles) {
+        init();
+        Set<String> oldTitles = getStringSet("rt-movies");
+        oldTitles.removeAll(titles);
+        SharedPreferences.Editor edit = prefs.edit();
+        for (String oldTitle : oldTitles) {
+            edit.remove("rt-movie-" + oldTitle);
+        }
+        edit.putStringSet("rt-movies", titles);
+        edit.apply();
+    }
+
     public class Keys{
-        public static final String IGNORE_LIST = "IGNORE_LIST";
-        public static final String EXCLUDE_LIST = "EXCLUDE_LIST";
+        private static final String IGNORE_LIST = "IGNORE_LIST";
         private static final String LAST_SAVE_DATE = "LAST_SAVE_DATE";
-        public static final String ALL_SUMMARIES = "ALL_SUMMARIES";
-        public static final String CURRENT_SUMMARIES = "CURRENT_SUMMARIES_2";
     }
 
 	

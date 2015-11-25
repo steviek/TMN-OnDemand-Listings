@@ -1,17 +1,20 @@
 package com.sixbynine.movieoracle.manager;
 
+import com.google.common.base.Optional;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
 import com.sixbynine.movieoracle.MyApplication;
-import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryResult;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.RTMovieQueryResultMap;
 import com.sixbynine.movieoracle.datamodel.tmn.TMNResources;
 import com.sixbynine.movieoracle.datamodel.webresources.WebResources;
 import com.sixbynine.movieoracle.events.RTMovieQueryResultMapLoadedEvent;
 import com.sixbynine.movieoracle.events.TMNResourcesLoadedEvent;
 import com.sixbynine.movieoracle.events.WebResourcesLoadedEvent;
+import com.sixbynine.movieoracle.util.Logger;
 import com.sixbynine.movieoracle.util.Prefs;
 import com.sixbynine.movieoracle.util.TMNDateUtils;
 import com.squareup.otto.Subscribe;
@@ -19,7 +22,6 @@ import com.squareup.otto.Subscribe;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Map;
 
 public final class DataManager {
 
@@ -37,7 +39,7 @@ public final class DataManager {
     }
 
     private State state;
-    private Map<String, RTMovieQueryResult> movieQueryResultMap;
+    private RTMovieQueryResultMap movieQueryResultMap;
 
     private DataManager() {
         state = State.INITIAL;
@@ -49,14 +51,16 @@ public final class DataManager {
             if (onDemandListingsAreStale()) {
                 if (hasInternet()) {
                     state = State.LOADING_WEB_RESOURCES;
-                    WebResources webResources = WebResourcesManager.getWebResources();
-                    if (webResources != null) {
-                        getInstance().loadTMNData(webResources);
+                    Optional<WebResources> webResources = WebResourcesManager.getWebResources();
+                    if (webResources.isPresent()) {
+                        getInstance().loadTMNData(webResources.get());
                     }
                 } else {
+                    movieQueryResultMap = Prefs.getCurrentResults();
                     state = State.ERROR_NO_INTERNET;
                 }
             } else {
+                movieQueryResultMap = Prefs.getCurrentResults();
                 state = State.LOADED;
             }
         }
@@ -65,6 +69,7 @@ public final class DataManager {
 
     private boolean onDemandListingsAreStale() {
         String oldDate = Prefs.getLastUpdateDate();
+        Logger.d("last update date: " + oldDate);
         return oldDate == null || Integer.parseInt(getLastTuesday()) - Integer.parseInt(oldDate) > 0;
     }
 
@@ -76,11 +81,9 @@ public final class DataManager {
 
     @SuppressLint("SimpleDateFormat")
     private String getLastTuesday() {
-        return new SimpleDateFormat("yyyyMMdd").format(TMNDateUtils.getLastTuesday().getTime());
-    }
-
-    private void saveUpdateDate() {
-        Prefs.saveLastUpdateDate(getDateStamp());
+        String lastTuesday = new SimpleDateFormat("yyyyMMdd").format(TMNDateUtils.getLastTuesday().getTime());
+        Logger.d("lastTuesday: " + lastTuesday);
+        return lastTuesday;
     }
 
     @Subscribe
@@ -90,9 +93,9 @@ public final class DataManager {
 
     private void loadTMNData(WebResources webResources) {
         state = State.LOADING_TMN;
-        TMNResources resources = TMNManager.loadData(webResources);
-        if (resources != null) {
-            loadRottenTomatesData(resources);
+        Optional<TMNResources> resources = TMNManager.loadData(webResources);
+        if (resources.isPresent()) {
+            loadRottenTomatesData(resources.get());
         }
     }
 
@@ -103,19 +106,16 @@ public final class DataManager {
 
     private void loadRottenTomatesData(TMNResources tmnResources) {
         state = State.LOADING_ROTTEN_TOMATOES;
-        Map<String, RTMovieQueryResult> movieQueryResultMap = RottenTomatoesManager.search(tmnResources);
-        if (movieQueryResultMap != null) {
-            displayData(movieQueryResultMap);
+        Optional<RTMovieQueryResultMap> movieQueryResultMap = RottenTomatoesManager.search(tmnResources);
+        if (movieQueryResultMap.isPresent()) {
+            onRTMovieQueryResultMapLoaded(new RTMovieQueryResultMapLoadedEvent(movieQueryResultMap.get()));
         }
     }
 
     @Subscribe
-    public void onRTMovieQueryResultMapLoaded(RTMovieQueryResultMapLoadedEvent rtMovieQueryResultMapLoadedEvent) {
-        displayData(rtMovieQueryResultMapLoadedEvent.getQueryResultMap());
-    }
-
-    private void displayData(Map<String, RTMovieQueryResult> movieQueryResultMap) {
-        this.movieQueryResultMap = movieQueryResultMap;
+    public void onRTMovieQueryResultMapLoaded(RTMovieQueryResultMapLoadedEvent event) {
+        this.movieQueryResultMap = event.getQueryResultMap();
+        Prefs.saveLastUpdateDate(getDateStamp());
         state = State.LOADED;
     }
 
@@ -124,11 +124,7 @@ public final class DataManager {
         return getInstance().loadDataIfNecessaryInner();
     }
 
-    public static State getState() {
-        return getInstance().state;
-    }
-
-    public static Map<String, RTMovieQueryResult> getMovieQueryResultMap() {
+    public static RTMovieQueryResultMap getMovieQueryResultMap() {
         return getInstance().movieQueryResultMap;
     }
 
@@ -139,7 +135,6 @@ public final class DataManager {
         return (networkInfo != null && networkInfo.isConnected());
     }
 
-
     public enum State {
         INITIAL,
         LOADING_WEB_RESOURCES,
@@ -147,6 +142,5 @@ public final class DataManager {
         LOADING_ROTTEN_TOMATOES,
         LOADED,
         ERROR_NO_INTERNET,
-        ERROR_UNKNOWN
     }
 }

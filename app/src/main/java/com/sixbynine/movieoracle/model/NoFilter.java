@@ -2,9 +2,9 @@ package com.sixbynine.movieoracle.model;
 
 import android.os.Parcel;
 
-import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryMovieSummary;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.RTMovieQueryMovieSummaryWithTitle;
 
-public final class NoFilter implements Filter {
+final class NoFilter implements Filter {
 
     @Override
     public boolean showFilter() {
@@ -14,6 +14,11 @@ public final class NoFilter implements Filter {
     @Override
     public boolean showSpinner() {
         return false;
+    }
+
+    @Override
+    public Type getType() {
+        return Type.NONE;
     }
 
     @Override
@@ -27,7 +32,7 @@ public final class NoFilter implements Filter {
     }
 
     @Override
-    public boolean apply(RTMovieQueryMovieSummary summary) {
+    public boolean apply(RTMovieQueryMovieSummaryWithTitle summary) {
         return true;
     }
 

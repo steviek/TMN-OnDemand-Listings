@@ -1,22 +1,27 @@
 package com.sixbynine.movieoracle.manager;
 
+import com.google.common.base.Optional;
+
 import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 
 import com.sixbynine.movieoracle.MyApplication;
 import com.sixbynine.movieoracle.datamodel.tmn.TMNResources;
 import com.sixbynine.movieoracle.datamodel.webresources.WebResources;
-import com.sixbynine.movieoracle.dataprocessor.DataProcessor;
 import com.sixbynine.movieoracle.events.TMNResourcesLoadedEvent;
 import com.sixbynine.movieoracle.util.Logger;
 import com.sixbynine.movieoracle.util.Prefs;
 import com.sixbynine.movieoracle.util.TMNDateUtils;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.Set;
@@ -25,11 +30,11 @@ public final class TMNManager {
 
     private static TMNResources resources;
 
-    public static TMNResources loadData(WebResources webResources) {
+    public static Optional<TMNResources> loadData(WebResources webResources) {
         if (resources == null) {
             new DownloadListings(webResources).execute();
         }
-        return resources;
+        return Optional.fromNullable(resources);
     }
 	
 	private static final class DownloadListings extends AsyncTask<Void, Void, TMNResources> {
@@ -49,7 +54,7 @@ public final class TMNManager {
                 Set<String> moviesSet = new HashSet<>();
                 Set<String> seriesSet = new HashSet<>();
 
-                String pageCode = DataProcessor.getHtml(url);
+                String pageCode = getHtml(url);
                 Document doc = Jsoup.parse(pageCode);
                 Elements shows = doc.select("td");
                 for (Element show : shows) {
@@ -70,9 +75,10 @@ public final class TMNManager {
 
                     if (seriesName != null) {
                         seriesSet.add(seriesName);
-                        Logger.i("Added " + title + " to series");
+                        Logger.v("Added " + title + " to series");
                     } else {
                         boolean exclude = false;
+
                         Set<String> ignoreList = Prefs.getIgnoreList();
                         for (String ignore : ignoreList) {
                             if (!"".equals(ignore) && title.startsWith(ignore)) {
@@ -82,12 +88,12 @@ public final class TMNManager {
                         }
 
                         if (!exclude) {
-                            Logger.i("Added " + title + " to movies");
+                            Logger.v("Added " + title + " to movies");
                             moviesSet.add(title);
                         }
                     }
                 }
-                Logger.i("Finished loading data.");
+                Logger.v("Finished loading TMN data.");
 
                 moviesSet.removeAll(seriesSet);
 
@@ -127,4 +133,17 @@ public final class TMNManager {
 		return new SimpleDateFormat("yyyy-MM-dd").format(TMNDateUtils.getLastTuesday().getTime());
 	}
 
+    private static String getHtml(String url) throws IOException {
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+        Response response = client.newCall(request).execute();
+
+        if (!response.isSuccessful()) {
+            throw new IOException("Unexpected code: " + response);
+        }
+
+        return response.body().string();
+    }
 }

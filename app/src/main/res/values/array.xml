@@ -5,7 +5,6 @@
         <item>None</item>
         <item>Rating</item>
         <item>Actor</item>
-        <item>Title</item>
     </string-array>
 
     <string-array name="sort_choices">

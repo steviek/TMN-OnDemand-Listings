@@ -1,11 +1,17 @@
 package com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery;
 
+import com.google.common.base.Optional;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.RTMovieQueryMovieSummaryWithTitle;
+import com.sixbynine.movieoracle.util.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class RTMovieQueryResult {
 
     private final int total;
@@ -27,7 +33,13 @@ public final class RTMovieQueryResult {
         return movies;
     }
 
-    public RTMovieQueryMovieSummary getBestMatch(String title) {
+    private Optional<RTMovieQueryMovieSummaryWithTitle> bestMatch = null;
+
+    public Optional<RTMovieQueryMovieSummaryWithTitle> getBestMatch(String title) {
+        if (bestMatch != null) {
+            return bestMatch;
+        }
+
         List<RTMovieQueryMovieSummary> exactMatches = new ArrayList<>();
         for (RTMovieQueryMovieSummary summary : movies) {
             if (summary.getTitle().equals(title)) {
@@ -37,9 +49,10 @@ public final class RTMovieQueryResult {
 
         if (exactMatches.isEmpty()) {
             if (movies.isEmpty()) {
-                return null;
+                Logger.w("returning absent best match for " + title);
+                bestMatch = Optional.absent();
             } else {
-                return movies.get(0);
+                bestMatch = Optional.of(new RTMovieQueryMovieSummaryWithTitle(movies.get(0), title));
             }
         } else {
             RTMovieQueryMovieSummary newest = null;
@@ -48,7 +61,8 @@ public final class RTMovieQueryResult {
                     newest = summary;
                 }
             }
-            return newest;
+            bestMatch = Optional.of(new RTMovieQueryMovieSummaryWithTitle(newest, title));
         }
+        return bestMatch;
     }
 }
