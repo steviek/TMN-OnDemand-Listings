@@ -37,8 +37,6 @@ public class FilterFragment extends BaseFragment {
 
     private Callback mCallback;
 
-    private Sorting mSort;
-
     public interface Callback {
         void applyFilterAndSort(Filter filter, Sorting sort);
 
@@ -94,7 +92,11 @@ public class FilterFragment extends BaseFragment {
         mFilterSpinner.setOnItemSelectedListener(new AbstractOnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                setFilterType(Filter.Type.fromName((String) parent.getSelectedItem()), null);
+                String filterParam = null;
+                if (mFilterSpinnerOption.getVisibility() == View.VISIBLE) {
+                    filterParam = (String) mFilterSpinnerOption.getAdapter().getItem(mFilterSpinnerOption.getSelectedItemPosition());
+                }
+                setFilterType(Filter.Type.fromName((String) parent.getSelectedItem()), filterParam);
                 syncViews();
             }
         });
@@ -176,7 +178,6 @@ public class FilterFragment extends BaseFragment {
                             }
                         })
                         .asList();
-                adapter.add(0, Filter.SELECT_ACTOR);
                 break;
             case TITLE:
                 throw new IllegalStateException("Unexpected state: TITLE");
@@ -186,13 +187,13 @@ public class FilterFragment extends BaseFragment {
             int index = filterParam == null ? 0 : Iterables.indexOf(adapter, new Predicate<String>() {
                 @Override
                 public boolean apply(@Nullable String s) {
-                    return s.equals(filterParam);
+                    return s != null && s.equals(filterParam);
                 }
             });
-            mFilterSpinnerOption.setSelection(index);
-            ArrayAdapter<String> sortAdapter = new ArrayAdapter<>(getContext(), R.layout.spinner_text, adapter);
-            sortAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            mFilterSpinnerOption.setAdapter(sortAdapter);
+            ArrayAdapter<String> filterSpinnerAdapter = new ArrayAdapter<>(getContext(), R.layout.spinner_text, adapter);
+            filterSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            mFilterSpinnerOption.setAdapter(filterSpinnerAdapter);
+            mFilterSpinnerOption.setSelection(index, true);
         }
     }
 
@@ -201,7 +202,7 @@ public class FilterFragment extends BaseFragment {
         String filterParam = null;
 
         if (mFilterSpinnerOption.getVisibility() == View.VISIBLE) {
-            filterParam = (String) mFilterSpinnerOption.getSelectedItem();
+            filterParam = (String) mFilterSpinnerOption.getAdapter().getItem(mFilterSpinnerOption.getSelectedItemPosition());
         }
         mFilterSpinnerOption.setVisibility(Filters.hasOptions(filterType) ? View.VISIBLE : View.INVISIBLE);
 

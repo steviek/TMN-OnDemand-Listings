@@ -8,15 +8,21 @@ android {
         applicationId "com.sixbynine.movieoracle"
         minSdkVersion 11
         targetSdkVersion 23
-        versionCode 9
-        versionName "3.2"
+        versionCode 10
+        versionName "4.0"
     }
+
     buildTypes {
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     packagingOptions {
         exclude 'META-INF/DEPENDENCIES.txt'
         exclude 'META-INF/DEPENDENCIES'
@@ -29,10 +35,14 @@ android {
         exclude 'META-INF/NOTICE'
         exclude 'META-INF/notice.txt'
     }
+
     testOptions {
         unitTests.returnDefaultValues = true
     }
+
+    useLibrary 'org.apache.http.legacy'
 }
+
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])

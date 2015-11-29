@@ -6,6 +6,7 @@ import com.sixbynine.movieoracle.MyApplication;
 import com.sixbynine.movieoracle.datamodel.webresources.WebResources;
 import com.sixbynine.movieoracle.datamodel.webresources.WebResourcesService;
 import com.sixbynine.movieoracle.events.WebResourcesLoadedEvent;
+import com.sixbynine.movieoracle.util.Logger;
 
 import retrofit.Callback;
 import retrofit.JacksonConverterFactory;
@@ -33,7 +34,7 @@ public final class WebResourcesManager {
 
                         @Override
                         public void onFailure(Throwable throwable) {
-
+                            Logger.e(throwable);
                         }
                     });
         }

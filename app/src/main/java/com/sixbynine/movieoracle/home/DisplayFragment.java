@@ -49,7 +49,6 @@ public class DisplayFragment extends Fragment {
     private View mSynopsisDivider;
     private TextView mCastHeader;
     private GridLayout mCastContainer;
-    //private TextView mCastBody;
     private View mCastDivider;
     private ViewGroup mRatingsContainer;
 
@@ -68,7 +67,7 @@ public class DisplayFragment extends Fragment {
     private Callback mCallback;
 
     public interface Callback{
-        void onActorClicked(RTMovieQueryCastMember actor);
+        void onActorClicked(String actor);
         void onPaletteLoaded(PaletteLoadedEvent event);
         boolean shouldShowBigPoster();
         boolean showLinks();
@@ -198,7 +197,7 @@ public class DisplayFragment extends Fragment {
             mCastContainer.removeAllViews();
             for (RTMovieQueryCastMember actor : mSummary.getCast()) {
                 TextView textView = (TextView) getActivity().getLayoutInflater().inflate(R.layout.text_view_actor, null);
-                textView.setTag(actor);
+                textView.setTag(actor.getName());
                 SpannableString string = new SpannableString(actor.getName());
                 string.setSpan(new UnderlineSpan(), 0, string.length(), 0);
                 textView.setText(string);
@@ -206,7 +205,7 @@ public class DisplayFragment extends Fragment {
                 textView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        mCallback.onActorClicked((RTMovieQueryCastMember) v.getTag());
+                        mCallback.onActorClicked((String) v.getTag());
                     }
                 });
             }
@@ -274,6 +273,9 @@ public class DisplayFragment extends Fragment {
                             .load(url)
                             .get();
                 } catch (IOException e) {
+                    Logger.e(e.toString());
+                    return null;
+                } catch (OutOfMemoryError e) {
                     Logger.e(e.toString());
                     return null;
                 }

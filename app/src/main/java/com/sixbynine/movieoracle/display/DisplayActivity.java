@@ -18,11 +18,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import com.sixbynine.movieoracle.MyApplication;
 import com.sixbynine.movieoracle.R;
 import com.sixbynine.movieoracle.Subscribes;
 import com.sixbynine.movieoracle.datamodel.rottentomatoes.RTMovieQueryMovieSummaryWithTitle;
-import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryCastMember;
 import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryMovieSummary;
 import com.sixbynine.movieoracle.events.PaletteLoadedEvent;
 import com.sixbynine.movieoracle.home.DisplayFragment;
@@ -77,9 +75,9 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
     }
 
     @Override
-    public void onActorClicked(RTMovieQueryCastMember actor) {
+    public void onActorClicked(String actor) {
         Intent intent = new Intent();
-        intent.putExtra("actor", MyApplication.getInstance().writeValueAsSring(actor));
+        intent.putExtra("actor", actor);
         setResult(RESULT_OK, intent);
         finish();
     }

@@ -8,7 +8,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -22,9 +21,7 @@ import com.sixbynine.movieoracle.AboutFragment;
 import com.sixbynine.movieoracle.MyApplication;
 import com.sixbynine.movieoracle.R;
 import com.sixbynine.movieoracle.datamodel.rottentomatoes.RTMovieQueryMovieSummaryWithTitle;
-import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryCastMember;
 import com.sixbynine.movieoracle.display.DisplayActivity;
-import com.sixbynine.movieoracle.events.PaletteLoadedEvent;
 import com.sixbynine.movieoracle.manager.DataManager;
 import com.sixbynine.movieoracle.model.Filter;
 import com.sixbynine.movieoracle.model.Filters;
@@ -37,7 +34,7 @@ import java.util.List;
 
 
 public final class HomeActivity extends BaseActivity implements SummaryListFragment.Callback,
-        DisplayFragment.Callback, FilterFragment.Callback {
+        FilterFragment.Callback {
 
     public static final int CHOOSE_ACTOR = 0;
     private List<RTMovieQueryMovieSummaryWithTitle> mSummaries;
@@ -151,10 +148,12 @@ public final class HomeActivity extends BaseActivity implements SummaryListFragm
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_home, menu);
-        mSearchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.action_search));
-        mSearchView.setQueryHint(getString(R.string.query_hint));
-        mSearchView.setOnQueryTextListener(mOnQueryTextListener);
-        ViewHelper.colorSearchView(mSearchView);
+        mSearchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        if (mSearchView != null) {
+            mSearchView.setQueryHint(getString(R.string.query_hint));
+            mSearchView.setOnQueryTextListener(mOnQueryTextListener);
+            ViewHelper.colorSearchView(mSearchView);
+        }
         return true;
     }
 
@@ -202,15 +201,10 @@ public final class HomeActivity extends BaseActivity implements SummaryListFragm
     }
 
     @Override
-    public void onActorClicked(RTMovieQueryCastMember actor) {
-
-    }
-
-    @Override
     public void applyFilterAndSort(Filter filter, Sorting sort) {
         mFilter = filter;
         mSort = sort;
-        if (filter.getType() == Filter.Type.ACTOR) {
+        if (filter.getType() == Filter.Type.TITLE) {
             mSearchView.setIconified(false);
         } else {
             mSummaryListFragment.sortAndFilter(sort, filter);
@@ -250,11 +244,6 @@ public final class HomeActivity extends BaseActivity implements SummaryListFragm
         animator.start();
     }
 
-    @Override
-    public void onPaletteLoaded(PaletteLoadedEvent event) {
-
-    }
-
     public void showFilter() {
         if (mFilterContainer.getVisibility() == View.VISIBLE) return;
         mFilterShowing = true;
@@ -282,16 +271,6 @@ public final class HomeActivity extends BaseActivity implements SummaryListFragm
             }
         });
         animator.start();
-    }
-
-    @Override
-    public boolean shouldShowBigPoster() {
-        return false;
-    }
-
-    @Override
-    public boolean showLinks() {
-        return true;
     }
 
     @Override

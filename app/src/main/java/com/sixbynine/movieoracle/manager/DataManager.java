@@ -125,6 +125,9 @@ public final class DataManager {
     }
 
     public static RTMovieQueryResultMap getMovieQueryResultMap() {
+        if (getInstance().movieQueryResultMap == null) {
+            getInstance().movieQueryResultMap = Prefs.getCurrentResults();
+        }
         return getInstance().movieQueryResultMap;
     }
 
