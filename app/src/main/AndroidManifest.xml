@@ -11,7 +11,8 @@
         android:name=".MyApplication"
         android:theme="@style/AppTheme">
 
-        <activity android:name=".home.HomeActivity"/>
+        <activity android:name=".home.HomeActivity"
+            android:theme="@style/ToolbarActivity"/>
 
         <activity android:name=".display.DisplayActivity"/>
 

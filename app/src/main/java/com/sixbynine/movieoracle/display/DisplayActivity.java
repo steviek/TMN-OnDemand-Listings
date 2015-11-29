@@ -19,40 +19,42 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import com.sixbynine.movieoracle.R;
+import com.sixbynine.movieoracle.Subscribes;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.RTMovieQueryMovieSummaryWithTitle;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryMovieSummary;
+import com.sixbynine.movieoracle.events.PaletteLoadedEvent;
 import com.sixbynine.movieoracle.home.DisplayFragment;
-import com.sixbynine.movieoracle.object.RottenTomatoesActorBrief;
-import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
+import com.sixbynine.movieoracle.manager.DataManager;
 import com.sixbynine.movieoracle.ui.activity.BaseActivity;
+import com.squareup.otto.Subscribe;
 
-/**
- * Created by steviekideckel on 11/13/14.
- */
-public class DisplayActivity extends BaseActivity implements DisplayFragment.Callback{
+@Subscribes
+public class DisplayActivity extends BaseActivity implements DisplayFragment.Callback {
 
     private DisplayFragment mDisplayFragment;
-    private ViewPager mPager;
-    private RottenTomatoesSummary mSummary;
-    private float minAlpha = 0.7f;
+    private RTMovieQueryMovieSummaryWithTitle mSummaryWithTitle;
+    private RTMovieQueryMovieSummary mSummary;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display);
         getSupportActionBar().setTitle("");
-        mSummary = getIntent().getParcelableExtra("summary");
+        mSummaryWithTitle = DataManager.getMovieQueryResultMap().getSummary(getIntent().getStringExtra("title"));
+        mSummary = mSummaryWithTitle.getSummary();
 
-        mPager = (ViewPager) findViewById(R.id.view_pager);
-        mPager.setAdapter(new MyPagerAdapter(getSupportFragmentManager()));
-        mPager.setCurrentItem(1);
-        mPager.setPageTransformer(false, new ViewPager.PageTransformer() {
+        ViewPager pager = (ViewPager) findViewById(R.id.view_pager);
+        pager.setAdapter(new MyPagerAdapter(getSupportFragmentManager()));
+        pager.setCurrentItem(1);
+        pager.setPageTransformer(false, new ViewPager.PageTransformer() {
             @Override
             public void transformPage(View view, float v) {
-                if(Build.VERSION.SDK_INT >= 11) {
+                if (Build.VERSION.SDK_INT >= 11) {
                     view.setAlpha(1 - Math.abs(v));
                 }
             }
         });
-        mPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+        pager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int i, float v, int i2) {
 
@@ -60,7 +62,7 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
 
             @Override
             public void onPageSelected(int i) {
-                if(i != 1){
+                if (i != 1) {
                     finish();
                 }
             }
@@ -73,26 +75,27 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
     }
 
     @Override
-    public void onActorClicked(RottenTomatoesActorBrief actor) {
+    public void onActorClicked(String actor) {
         Intent intent = new Intent();
-        intent.putExtra("actor", actor.getName());
+        intent.putExtra("actor", actor);
         setResult(RESULT_OK, intent);
         finish();
     }
 
     @Override
     public void onBackPressed() {
-        if(mDisplayFragment == null || !mDisplayFragment.hideBigPoster()){
+        if (mDisplayFragment == null || !mDisplayFragment.hideBigPoster()) {
             super.onBackPressed(); //do on back pressed if the big poster wasn't showing
         }
     }
 
     @Override
-    public void presentPalette(Palette palette) {
-        Palette.Swatch swatch = palette.getDarkVibrantSwatch();
-        if(swatch != null) {
+    @Subscribe
+    public void onPaletteLoaded(PaletteLoadedEvent event) {
+        Palette.Swatch swatch = event.getPalette().getDarkVibrantSwatch();
+        if (swatch != null) {
             getSupportActionBar().setBackgroundDrawable(new ColorDrawable(swatch.getRgb()));
-            if(Build.VERSION.SDK_INT >= 21){
+            if (Build.VERSION.SDK_INT >= 21) {
                 getWindow().setStatusBarColor(getResources().getColor(android.R.color.black));
             }
         }
@@ -107,12 +110,12 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_display, menu);
         String imdbId = null;
-        if(mSummary.getAltIds() != null){
+        if (mSummary.getAltIds() != null) {
             imdbId = mSummary.getAltIds().getImdbId();
         }
         menu.findItem(R.id.action_imdb).setVisible(imdbId != null && !imdbId.isEmpty());
         String rtId = null;
-        if(mSummary.getLinks() != null){
+        if (mSummary.getLinks() != null) {
             rtId = mSummary.getLinks().getAlternate();
         }
         menu.findItem(R.id.action_rt).setVisible(rtId != null && !rtId.isEmpty());
@@ -122,7 +125,7 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.action_imdb:
                 String imdbId = mSummary.getAltIds().getImdbId();
                 String url = "http://www.imdb.com/title/tt" + imdbId;
@@ -143,7 +146,7 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
         return super.onOptionsItemSelected(item);
     }
 
-    public static class PlaceHolderFragment extends Fragment{
+    public static class PlaceHolderFragment extends Fragment {
         @Override
         public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
             View view = new FrameLayout(getActivity());
@@ -153,7 +156,7 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
         }
     }
 
-    private class MyPagerAdapter extends FragmentPagerAdapter{
+    private class MyPagerAdapter extends FragmentPagerAdapter {
 
         private MyPagerAdapter(FragmentManager fm) {
             super(fm);
@@ -161,17 +164,17 @@ public class DisplayActivity extends BaseActivity implements DisplayFragment.Cal
 
         @Override
         public Fragment getItem(int i) {
-            if(i == 0 || i == 2){
+            if (i == 0 || i == 2) {
                 return new PlaceHolderFragment();
-            }else{
-                mDisplayFragment = DisplayFragment.newInstance(mSummary);
+            } else {
+                mDisplayFragment = DisplayFragment.newInstance(mSummaryWithTitle);
                 return mDisplayFragment;
             }
         }
 
         @Override
         public int getCount() {
-                return 3;
+            return 3;
         }
     }
 

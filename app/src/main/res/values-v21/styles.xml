@@ -5,4 +5,8 @@
         <item name="android:colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="android:searchIcon">@drawable/ic_action_search</item>
     </style>
+
+    <style name="TopBar">
+        <item name="android:elevation">8dp</item>
+    </style>
 </resources>

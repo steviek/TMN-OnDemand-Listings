@@ -1,9 +1,14 @@
 package com.sixbynine.movieoracle.home;
 
-import android.app.Activity;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,17 +16,19 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
+import com.sixbynine.movieoracle.BaseFragment;
 import com.sixbynine.movieoracle.R;
+import com.sixbynine.movieoracle.abstracts.AbstractOnItemSelectedListener;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.RTMovieQueryMovieSummaryWithTitle;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryCastMember;
 import com.sixbynine.movieoracle.model.Filter;
-import com.sixbynine.movieoracle.model.Sort;
-import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
+import com.sixbynine.movieoracle.model.Filters;
+import com.sixbynine.movieoracle.model.Sorting;
 
+import java.util.Comparator;
 import java.util.List;
 
-/**
- * Created by steviekideckel on 11/20/14.
- */
-public class FilterFragment extends Fragment{
+public class FilterFragment extends BaseFragment {
 
     private Spinner mFilterSpinner;
     private Spinner mSortSpinner;
@@ -30,103 +37,83 @@ public class FilterFragment extends Fragment{
 
     private Callback mCallback;
 
-    private Filter mFilter;
-    private String mFilterParameter;
-    private Sort mSort;
+    public interface Callback {
+        void applyFilterAndSort(Filter filter, Sorting sort);
 
-    public interface Callback{
-        public void applyFilterAndSort(Filter filter, Sort sort, String parameter);
-        public List<RottenTomatoesSummary> getSummaries();
-        public void hideFilter();
+        List<RTMovieQueryMovieSummaryWithTitle> getSummaries();
+
+        void hideFilter();
     }
 
-    public static FilterFragment newInstance(){
-        return newInstance(Filter.NONE, Sort.ALPHABETICAL, null);
+    public static FilterFragment newInstance() {
+        return newInstance(Filter.Type.NONE, null, Sorting.ALPHABETICAL);
     }
 
-    public static FilterFragment newInstance(Filter filter, Sort sort, String parameter){
+    public static FilterFragment newInstance(Filter.Type filterType, String filterParam, Sorting sort) {
         FilterFragment frag = new FilterFragment();
         Bundle b = new Bundle();
-        if(filter != null){
-            b.putInt("filter", filter.id);
+        if (filterType != null) {
+            b.putString("filterType", filterType.name());
+            b.putString("filterParam", filterParam);
+        } else {
+            b.putString("filterType", Filter.Type.NONE.name());
         }
-        if(sort != null){
-            b.putInt("sort", sort.id);
-        }
-        if(parameter != null){
-            b.putString("param", parameter);
+        if (sort != null) {
+            b.putString("sort", sort.name());
         }
         frag.setArguments(b);
         return frag;
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        if(activity instanceof Callback){
-            mCallback = (Callback) activity;
-        }else{
-            throw new IllegalStateException(activity.toString() + " must implement Callback interface");
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof Callback) {
+            mCallback = (Callback) context;
+        } else {
+            throw new IllegalStateException(context.toString() + " must implement Callback interface");
         }
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if(savedInstanceState == null){
-            Bundle args = getArguments();
-            int filterKey = args.getInt("filter", -1);
-            if(filterKey != -1) mFilter = Filter.fromId(filterKey);
-            int sortKey = args.getInt("sort", -1);
-            if(sortKey != -1) mSort = Sort.fromId(sortKey);
-            mFilterParameter = args.getString("param");
-        }
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(
+            LayoutInflater inflater,
+            @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_filter, container, false);
 
         mFilterSpinner = (Spinner) view.findViewById(R.id.filter_spinner);
-        ArrayAdapter<CharSequence> filterAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.filter_choices,
+        ArrayAdapter<CharSequence> filterAdapter = ArrayAdapter.createFromResource(
+                getActivity(),
+                R.array.filter_choices,
                 R.layout.spinner_text);
         filterAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mFilterSpinner.setAdapter(filterAdapter);
-        mFilterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        mFilterSpinner.setOnItemSelectedListener(new AbstractOnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                applyFilter(true);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
+                String filterParam = null;
+                if (mFilterSpinnerOption.getVisibility() == View.VISIBLE) {
+                    filterParam = (String) mFilterSpinnerOption.getAdapter().getItem(mFilterSpinnerOption.getSelectedItemPosition());
+                }
+                setFilterType(Filter.Type.fromName((String) parent.getSelectedItem()), filterParam);
+                syncViews();
             }
         });
 
         mFilterSpinnerOption = (Spinner) view.findViewById(R.id.filter_spinner_choices);
-        mFilterSpinnerOption.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        mFilterSpinnerOption.setOnItemSelectedListener(new AbstractOnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                applyFilter(false);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
+                syncViews();
             }
         });
 
         mSortSpinner = (Spinner) view.findViewById(R.id.sort_spinner);
-        mSortSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        mSortSpinner.setOnItemSelectedListener(new AbstractOnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                applyFilter(false);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
+                syncViews();
             }
         });
         ArrayAdapter<CharSequence> sortAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.sort_choices,
@@ -134,89 +121,100 @@ public class FilterFragment extends Fragment{
         sortAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mSortSpinner.setAdapter(sortAdapter);
 
+        Bundle args = getArguments();
+
+        Filter.Type filterType = Filter.Type.valueOf(args.getString("filterType"));
+        mFilterSpinner.setSelection(Filters.indexOf(filterType));
+        setFilterType(filterType, args.getString("filterParam"));
+
+        Sorting sort = Sorting.valueOf(args.getString("sort"));
+
         view.findViewById(R.id.clear_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mFilterParameter == null && mFilter == Filter.NONE && mSort == Sort.ALPHABETICAL){
-                    mCallback.hideFilter();
-                }else{
-                    mFilterParameter = null;
-                    mFilter = Filter.NONE;
-                    mSort = Sort.ALPHABETICAL;
-                    initFilteredViews();
-                    mCallback.applyFilterAndSort(mFilter, mSort, mFilterParameter);
-                }
+                mFilterSpinner.setSelection(0);
+                mSortSpinner.setSelection(0);
+                syncViews();
             }
         });
 
-        initFilteredViews();
-
-
+        syncViews();
 
         return view;
     }
 
-    private void initFilteredViews(){
-        if(mFilter != null){
-            mFilterSpinner.setSelection(mFilter.id);
+    private void setFilterType(Filter.Type filterType, final String filterParam) {
+        mFilterSpinnerOption.setVisibility(Filters.hasOptions(filterType) ? View.VISIBLE : View.INVISIBLE);
+        List<String> adapter = null;
+        switch (filterType) {
+            case RATING:
+                adapter = ImmutableList.of(Filter.RATING_ALL, Filter.RATING_FRESH);
+                break;
+            case ACTOR:
+                adapter = FluentIterable.from(mCallback.getSummaries())
+                        .transformAndConcat(new Function<RTMovieQueryMovieSummaryWithTitle, Iterable<String>>() {
+                            @Override
+                            public Iterable<String> apply(@Nullable RTMovieQueryMovieSummaryWithTitle summary) {
+                                return FluentIterable.from(summary.getSummary().getCast())
+                                        .transform(new Function<RTMovieQueryCastMember, String>() {
+                                            @Override
+                                            public String apply(@Nullable RTMovieQueryCastMember castMember) {
+                                                return castMember.getName();
+                                            }
+                                        }).toList();
+                            }
+                        })
+                        .append(Filter.SELECT_ACTOR)
+                        .toSortedSet(new Comparator<String>() {
+                            @Override
+                            public int compare(String lhs, String rhs) {
+                                if (lhs.equals(Filter.SELECT_ACTOR)) {
+                                    return -1;
+                                } else if (rhs.equals(Filter.SELECT_ACTOR)) {
+                                    return 1;
+                                } else {
+                                    return lhs.compareTo(rhs);
+                                }
+                            }
+                        })
+                        .asList();
+                break;
+            case TITLE:
+                throw new IllegalStateException("Unexpected state: TITLE");
+        }
 
-            if(mFilter == Filter.NONE){
-                mFilterSpinnerOption.setVisibility(View.INVISIBLE);
-            }else if(mFilter == Filter.TITLE){
-                mFilterSpinnerOption.setVisibility(View.INVISIBLE);
-            }else{
-                mFilterSpinnerOption.setVisibility(View.VISIBLE);
-                List<String> choices = RottenTomatoesSummary.getAllChoices(mCallback.getSummaries(), mFilter);
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
-                        R.layout.spinner_text,
-                        choices);
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                mFilterSpinnerOption.setAdapter(adapter);
-
-                if(mFilterParameter != null){
-                    int index = choices.indexOf(mFilterParameter);
-                    if(index != -1){
-                        mFilterSpinnerOption.setSelection(index);
-                    }
+        if (adapter != null) {
+            int index = filterParam == null ? 0 : Iterables.indexOf(adapter, new Predicate<String>() {
+                @Override
+                public boolean apply(@Nullable String s) {
+                    return s != null && s.equals(filterParam);
                 }
-            }
-
-        }
-
-        if(mSort != null){
-            mSortSpinner.setSelection(mSort.id);
-        }
-    }
-
-    private void applyFilter(boolean initAfter){
-
-        mFilter = Filter.fromId(mFilterSpinner.getSelectedItemPosition());
-
-        mSort = Sort.fromId(mSortSpinner.getSelectedItemPosition());
-
-        if(mFilterSpinnerOption.getVisibility() == View.VISIBLE){
-            mFilterParameter = (String) mFilterSpinnerOption.getSelectedItem();
-        }else{
-            mFilterParameter = null;
-        }
-        mCallback.applyFilterAndSort(mFilter, mSort, mFilterParameter);
-
-        if(initAfter){
-            initFilteredViews();
+            });
+            ArrayAdapter<String> filterSpinnerAdapter = new ArrayAdapter<>(getContext(), R.layout.spinner_text, adapter);
+            filterSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            mFilterSpinnerOption.setAdapter(filterSpinnerAdapter);
+            mFilterSpinnerOption.setSelection(index, true);
         }
     }
 
-    public void setFilter(Filter filter, String param){
-        mFilter = filter;
-        mFilterParameter = param;
-        initFilteredViews();
-    }
+    private void syncViews() {
+        Filter.Type filterType = Filter.Type.fromName((String) mFilterSpinner.getSelectedItem());
+        String filterParam = null;
 
-    public Filter getFilter(){
-        return mFilter;
-    }
+        if (mFilterSpinnerOption.getVisibility() == View.VISIBLE) {
+            filterParam = (String) mFilterSpinnerOption.getAdapter().getItem(mFilterSpinnerOption.getSelectedItemPosition());
+        }
+        mFilterSpinnerOption.setVisibility(Filters.hasOptions(filterType) ? View.VISIBLE : View.INVISIBLE);
 
-    public Sort getSort(){
-        return mSort;
+        Sorting sort = Sorting.fromName((String) mSortSpinner.getSelectedItem());
+
+        Filter filter;
+        if (filterType != null && !(filterParam == null && Filters.hasOptions(filterType))) {
+            filter = Filters.create(filterType, filterParam);
+        } else {
+            filter = Filters.create(Filter.Type.NONE, null);
+        }
+
+        mCallback.applyFilterAndSort(filter, sort);
     }
 }

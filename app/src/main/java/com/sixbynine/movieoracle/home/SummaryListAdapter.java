@@ -1,7 +1,6 @@
 package com.sixbynine.movieoracle.home;
 
 import android.content.Context;
-import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,17 +8,12 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import com.sixbynine.movieoracle.R;
-import com.sixbynine.movieoracle.object.RottenTomatoesRatings;
-import com.sixbynine.movieoracle.object.RottenTomatoesSummary;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.RTMovieQueryMovieSummaryWithTitle;
+import com.sixbynine.movieoracle.datamodel.rottentomatoes.moviequery.RTMovieQueryRatings;
 
 import java.util.ArrayList;
 
-/**
- * Created by steviekideckel on 11/2/14.
- */
-public class SummaryListAdapter extends ArrayAdapter<RottenTomatoesSummary> {
-    private ArrayList<RottenTomatoesSummary> mSummaries;
-    private int mSelected = -1;
+public class SummaryListAdapter extends ArrayAdapter<RTMovieQueryMovieSummaryWithTitle> {
 
     public static class ViewHolder{
         public TextView mTitle;
@@ -37,49 +31,31 @@ public class SummaryListAdapter extends ArrayAdapter<RottenTomatoesSummary> {
         }
     }
 
-    public SummaryListAdapter(Context context, ArrayList<RottenTomatoesSummary> summaries){
+    public SummaryListAdapter(Context context, ArrayList<RTMovieQueryMovieSummaryWithTitle> summaries){
         super(context, R.layout.row_movie_new, summaries);
-        mSummaries = summaries;
-
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         if(convertView == null){
-            convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_movie_new, null);
+            convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_movie_new, parent, false);
             ViewHolder viewHolder = new ViewHolder(convertView);
             convertView.setTag(viewHolder);
         }
 
-
-
         ViewHolder viewHolder = (ViewHolder) convertView.getTag();
         bindView(viewHolder, position);
-
-        /*if(position == mSelected){
-            if(Build.VERSION.SDK_INT >= 16) {
-                convertView.setBackground(getContext().getResources().getDrawable(R.drawable.selected_background));
-            }else{
-                convertView.setBackgroundDrawable(getContext().getResources().getDrawable(R.drawable.selected_background));
-            }
-        }else{
-            if(Build.VERSION.SDK_INT >= 16) {
-                convertView.setBackground(getContext().getResources().getDrawable(R.drawable.selector_white));
-            }else{
-                convertView.setBackgroundDrawable(getContext().getResources().getDrawable(R.drawable.selector_white));
-            }
-        }*/
 
         return convertView;
     }
 
     public void bindView(ViewHolder viewHolder, int position) {
-        final RottenTomatoesSummary summary = mSummaries.get(position);
+        RTMovieQueryMovieSummaryWithTitle summary = getItem(position);
         viewHolder.mTitle.setText(summary.getTitle());
 
-        final RottenTomatoesRatings ratings = summary.getRatings();
+        RTMovieQueryRatings ratings = summary.getSummary().getRatings();
 
-        final int criticsScore = ratings.getCriticsScore();
+        int criticsScore = ratings.getCriticsScore();
         if(criticsScore >= 60){
             viewHolder.mCriticTextViewFresh.setVisibility(View.VISIBLE);
             viewHolder.mCriticTextViewRotten.setVisibility(View.GONE);
@@ -106,21 +82,5 @@ public class SummaryListAdapter extends ArrayAdapter<RottenTomatoesSummary> {
             viewHolder.mAudienceTextViewFresh.setVisibility(View.GONE);
             viewHolder.mAudienceTextViewRotten.setVisibility(View.INVISIBLE);
         }
-
-
-    }
-
-    @Override
-    public int getCount() {
-        if(mSummaries == null){
-            return 0;
-        }else{
-            return mSummaries.size();
-        }
-    }
-
-    public void setSelectedIndex(int index){
-        mSelected = index;
-        notifyDataSetChanged();
     }
 }

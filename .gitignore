@@ -7,3 +7,7 @@
 *Keys.java
 
 app/src/main/java/com/sixbynine/movieoracle/util/Keys.java
+
+*.iml
+*.eml
+.idea/
